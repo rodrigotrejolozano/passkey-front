@@ -41,3 +41,11 @@ export async function apiRequest<T>(
 
   return (await response.json()) as T;
 }
+
+export function jsonRequest<T>(path: string, body: unknown): Promise<T> {
+  return apiRequest<T>(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}

@@ -1,11 +1,17 @@
+import Link from "next/link";
+
 export default function HomePage() {
   return (
     <main>
       <p className="eyebrow">PASSWORDLESS</p>
       <h1>Authentication without passwords.</h1>
       <p>
-        The public authentication experience will be implemented in Phase 3.
+        No passwords to remember. No passwords to leak. No passwords to reset.
       </p>
+      <nav aria-label="Authentication actions">
+        <Link href="/create-account">Create account</Link>
+        <Link href="/sign-in">Sign in</Link>
+      </nav>
     </main>
   );
 }
