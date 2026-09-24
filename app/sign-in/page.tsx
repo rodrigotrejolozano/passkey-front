@@ -48,7 +48,14 @@ export default function SignInPage() {
       <button onClick={signIn} disabled={loading}>
         {loading ? "Signing in..." : "Sign in with Passkey"}
       </button>
-      <button disabled>Continue with Google (coming next)</button>
+      <button
+        onClick={() =>
+          (window.location.href = `${process.env.NEXT_PUBLIC_API_ORIGIN ?? "http://localhost:3001"}/api/auth/google/start`)
+        }
+        disabled={loading}
+      >
+        Continue with Google
+      </button>
       <Link href="/recovery">Can&apos;t access your account?</Link>
       {error && <p role="alert">{error}</p>}
     </main>

@@ -56,7 +56,14 @@ export default function CreateAccountPage() {
       <button onClick={register} disabled={loading}>
         {loading ? "Creating passkey..." : "Continue with Passkey"}
       </button>
-      <button disabled>Continue with Google (coming next)</button>
+      <button
+        onClick={() =>
+          (window.location.href = `${process.env.NEXT_PUBLIC_API_ORIGIN ?? "http://localhost:3001"}/api/auth/google/start`)
+        }
+        disabled={loading}
+      >
+        Continue with Google
+      </button>
       {error && <p role="alert">{error}</p>}
     </main>
   );
