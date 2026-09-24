@@ -14,34 +14,34 @@ Documentos de referencia obligatorios:
 
 ## 2. Tecnologias
 
-| Area | Decision |
-| --- | --- |
-| Framework | Next.js con TypeScript. |
-| Ceremonias passkey | `@simplewebauthn/browser`. |
-| Estilos | Sistema liviano y consistente; se decide al crear el proyecto, sin cambiar UX definida. |
-| Estado remoto | Capa de API tipada basada en los contratos backend. |
-| Sesion | Cookie HttpOnly enviada por el navegador con `credentials: 'include'`. |
-| Tests | Vitest/Jest de componentes y Playwright E2E. |
+| Area               | Decision                                                                                |
+| ------------------ | --------------------------------------------------------------------------------------- |
+| Framework          | Next.js con TypeScript.                                                                 |
+| Ceremonias passkey | `@simplewebauthn/browser`.                                                              |
+| Estilos            | Sistema liviano y consistente; se decide al crear el proyecto, sin cambiar UX definida. |
+| Estado remoto      | Capa de API tipada basada en los contratos backend.                                     |
+| Sesion             | Cookie HttpOnly enviada por el navegador con `credentials: 'include'`.                  |
+| Tests              | Vitest/Jest de componentes y Playwright E2E.                                            |
 
 No se guarda token en JavaScript, `localStorage` o `sessionStorage`.
 
 ## 3. Rutas
 
-| Ruta | Tipo | Proposito |
-| --- | --- | --- |
-| `/` | Publica | Landing educativa passwordless. |
-| `/create-account` | Publica | Nombre y registro mediante passkey o Google. |
-| `/sign-in` | Publica | Login passkey, Google y acceso a recovery. |
-| `/recovery` | Publica | Elegir email o recovery code. |
-| `/recovery/email` | Publica | Solicitar y verificar OTP/Magic Link. |
-| `/recovery/code` | Publica | Verificar recovery code. |
-| `/restore-access` | Recovery-only | Crear passkey o conectar Google desde RecoverySession. |
-| `/auth/result` | Publica | Resultado seguro de callback Google o Magic Link, sin secretos en URL. |
-| `/home` | Autenticada | Dashboard sencillo y estado de seguridad. |
-| `/security/sign-in` | Autenticada | Passkeys y Google. |
-| `/security/recovery` | Autenticada | Recovery email y recovery codes. |
-| `/security/sessions` | Autenticada | Sesiones activas y revocacion. |
-| `/profile` | Autenticada | Cambio de display name. |
+| Ruta                 | Tipo          | Proposito                                                              |
+| -------------------- | ------------- | ---------------------------------------------------------------------- |
+| `/`                  | Publica       | Landing educativa passwordless.                                        |
+| `/create-account`    | Publica       | Nombre y registro mediante passkey o Google.                           |
+| `/sign-in`           | Publica       | Login passkey, Google y acceso a recovery.                             |
+| `/recovery`          | Publica       | Elegir email o recovery code.                                          |
+| `/recovery/email`    | Publica       | Solicitar y verificar OTP/Magic Link.                                  |
+| `/recovery/code`     | Publica       | Verificar recovery code.                                               |
+| `/restore-access`    | Recovery-only | Crear passkey o conectar Google desde RecoverySession.                 |
+| `/auth/result`       | Publica       | Resultado seguro de callback Google o Magic Link, sin secretos en URL. |
+| `/home`              | Autenticada   | Dashboard sencillo y estado de seguridad.                              |
+| `/security/sign-in`  | Autenticada   | Passkeys y Google.                                                     |
+| `/security/recovery` | Autenticada   | Recovery email y recovery codes.                                       |
+| `/security/sessions` | Autenticada   | Sesiones activas y revocacion.                                         |
+| `/profile`           | Autenticada   | Cambio de display name.                                                |
 
 Middleware o guard de cliente mejora navegacion, pero la API es siempre la autoridad. Si `GET /api/auth/me` rechaza una sesion, se limpia el estado visual y se redirige a `/sign-in`.
 

@@ -1,0 +1,36 @@
+:root {
+  color-scheme: light;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f7f7f5;
+  color: #151515;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  display: grid;
+  min-height: 100vh;
+  max-width: 44rem;
+  align-content: center;
+  gap: 1rem;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+h1,
+p {
+  margin: 0;
+}
+
+.eyebrow {
+  color: #22543d;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
