@@ -8,12 +8,13 @@ import { ApiError, jsonRequest } from "@/lib/api/client";
 export default function RecoveryCodePage() {
   const [code, setCode] = useState("");
   const [error, setError] = useState<string>();
+  const [verified, setVerified] = useState(false);
   async function verify(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(undefined);
     try {
       await jsonRequest("/api/recovery/code", { code });
-      window.location.assign("/restore-access");
+      setVerified(true);
     } catch (cause) {
       setError(
         cause instanceof ApiError
@@ -26,17 +27,21 @@ export default function RecoveryCodePage() {
     <main>
       <p className="eyebrow">ACCOUNT RECOVERY</p>
       <h1>Use a recovery code</h1>
-      <form onSubmit={verify}>
-        <label htmlFor="code">Recovery code</label>
-        <input
-          id="code"
-          value={code}
-          onChange={(event) => setCode(event.target.value)}
-          autoComplete="one-time-code"
-          required
-        />
-        <button type="submit">Verify recovery code</button>
-      </form>
+      {!verified ? (
+        <form onSubmit={verify}>
+          <label htmlFor="code">Recovery code</label>
+          <input
+            id="code"
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
+            autoComplete="one-time-code"
+            required
+          />
+          <button type="submit">Verify recovery code</button>
+        </form>
+      ) : (
+        <p>Recovery verified. You can now restore a sign-in method.</p>
+      )}
       {error && <p role="alert">{error}</p>}
       <Link href="/recovery">Use recovery email instead</Link>
     </main>
