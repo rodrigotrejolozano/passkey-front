@@ -40,7 +40,13 @@ export default function RecoveryCodePage() {
           <button type="submit">Verify recovery code</button>
         </form>
       ) : (
-        <p>Recovery verified. You can now restore a sign-in method.</p>
+        <p>
+          Recovery verified.{" "}
+          <Link href="/restore-access">
+            Create a new Passkey to restore access
+          </Link>
+          .
+        </p>
       )}
       {error && <p role="alert">{error}</p>}
       <Link href="/recovery">Use recovery email instead</Link>
