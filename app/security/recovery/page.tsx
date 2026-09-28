@@ -6,7 +6,11 @@ import { FormEvent, useEffect, useState } from "react";
 import { AuthNavigation } from "@/components/auth-navigation";
 import { RecoveryCodesDialog } from "@/components/recovery-codes-dialog";
 import { StepUpDialog } from "@/components/step-up-dialog";
-import { apiRequest, jsonRequest } from "@/lib/api/client";
+import {
+  apiRequest,
+  protectedJsonRequest,
+  protectedRequest,
+} from "@/lib/api/client";
 
 type RecoveryEmailResponse = {
   data: { recoveryEmail: { email: string; verifiedAt: string } | null };
@@ -34,7 +38,7 @@ export default function RecoverySettingsPage() {
     void load();
   }, []);
   async function requestVerification() {
-    const result = await jsonRequest<VerificationResponse>(
+    const result = await protectedJsonRequest<VerificationResponse>(
       "/api/security/recovery-email/verification",
       { email, deliveryMethod },
     );
@@ -44,21 +48,26 @@ export default function RecoverySettingsPage() {
   async function confirm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!challengeId) return;
-    await jsonRequest("/api/security/recovery-email/verification/confirm", {
-      challengeId,
-      code,
-    });
+    await protectedJsonRequest(
+      "/api/security/recovery-email/verification/confirm",
+      {
+        challengeId,
+        code,
+      },
+    );
     setChallengeId(undefined);
     setCode("");
     setEditing(false);
     await load();
   }
   async function remove() {
-    await apiRequest("/api/security/recovery-email", { method: "DELETE" });
+    await protectedRequest("/api/security/recovery-email", {
+      method: "DELETE",
+    });
     await load();
   }
   async function generateCodes() {
-    const result = await jsonRequest<RecoveryCodesResponse>(
+    const result = await protectedJsonRequest<RecoveryCodesResponse>(
       "/api/security/recovery-email/codes",
       {},
     );

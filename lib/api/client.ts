@@ -53,3 +53,55 @@ export function jsonRequest<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   });
 }
+
+type CsrfScope = "session" | "recovery";
+type CsrfResponse = { data: { csrfToken: string } };
+
+const csrfTokens: Partial<Record<CsrfScope, string>> = {};
+
+async function getCsrfToken(scope: CsrfScope): Promise<string> {
+  if (csrfTokens[scope]) return csrfTokens[scope];
+  const endpoint =
+    scope === "session" ? "/api/auth/csrf" : "/api/recovery/csrf";
+  const result = await apiRequest<CsrfResponse>(endpoint);
+  csrfTokens[scope] = result.data.csrfToken;
+  return result.data.csrfToken;
+}
+
+export async function protectedRequest<T>(
+  path: string,
+  init: RequestInit,
+  scope: CsrfScope = "session",
+): Promise<T> {
+  async function send() {
+    const csrfToken = await getCsrfToken(scope);
+    return apiRequest<T>(path, {
+      ...init,
+      headers: { ...init.headers, "X-CSRF-Token": csrfToken },
+    });
+  }
+  try {
+    return await send();
+  } catch (cause) {
+    if (!(cause instanceof ApiError) || cause.code !== "CSRF_INVALID")
+      throw cause;
+    delete csrfTokens[scope];
+    return send();
+  }
+}
+
+export function protectedJsonRequest<T>(
+  path: string,
+  body: unknown,
+  scope: CsrfScope = "session",
+): Promise<T> {
+  return protectedRequest<T>(
+    path,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    },
+    scope,
+  );
+}

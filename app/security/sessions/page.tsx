@@ -3,7 +3,11 @@
 import { useEffect, useState } from "react";
 
 import { AuthNavigation } from "@/components/auth-navigation";
-import { apiRequest, jsonRequest } from "@/lib/api/client";
+import {
+  apiRequest,
+  protectedJsonRequest,
+  protectedRequest,
+} from "@/lib/api/client";
 
 type SessionsResponse = {
   data: {
@@ -26,11 +30,11 @@ export default function SessionsPage() {
     void load();
   }, []);
   async function revokeOthers() {
-    await jsonRequest("/api/sessions/revoke-others", {});
+    await protectedJsonRequest("/api/sessions/revoke-others", {});
     await load();
   }
   async function revoke(id: string) {
-    await apiRequest(`/api/sessions/${id}`, { method: "DELETE" });
+    await protectedRequest(`/api/sessions/${id}`, { method: "DELETE" });
     await load();
   }
   return (

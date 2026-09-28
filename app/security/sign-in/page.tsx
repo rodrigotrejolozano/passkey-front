@@ -5,7 +5,11 @@ import { useEffect, useState } from "react";
 
 import { AuthNavigation } from "@/components/auth-navigation";
 import { StepUpDialog } from "@/components/step-up-dialog";
-import { apiRequest, jsonRequest } from "@/lib/api/client";
+import {
+  apiRequest,
+  protectedJsonRequest,
+  protectedRequest,
+} from "@/lib/api/client";
 
 type Passkey = { id: string; name: string; createdAt: string };
 type PasskeyResponse = { data: { passkeys: Passkey[] } };
@@ -31,28 +35,30 @@ export default function SignInMethodsPage() {
     void load();
   }, []);
   async function addPasskey() {
-    const options = await jsonRequest<RegistrationOptions>(
+    const options = await protectedJsonRequest<RegistrationOptions>(
       "/api/security/passkeys/options",
       {},
     );
     const response = await startRegistration({
       optionsJSON: options.data.options as never,
     });
-    await jsonRequest("/api/security/passkeys/verify", {
+    await protectedJsonRequest("/api/security/passkeys/verify", {
       challengeId: options.data.challengeId,
       response,
     });
     await load();
   }
   async function removePasskey(id: string) {
-    await apiRequest(`/api/security/passkeys/${id}`, { method: "DELETE" });
+    await protectedRequest(`/api/security/passkeys/${id}`, {
+      method: "DELETE",
+    });
     await load();
   }
   async function renamePasskey(id: string) {
     const current = passkeys.find((passkey) => passkey.id === id);
     const name = window.prompt("Passkey name", current?.name);
     if (!name?.trim()) return;
-    await apiRequest(`/api/security/passkeys/${id}`, {
+    await protectedRequest(`/api/security/passkeys/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
@@ -60,7 +66,7 @@ export default function SignInMethodsPage() {
     await load();
   }
   async function disconnectGoogle() {
-    await apiRequest("/api/security/google", { method: "DELETE" });
+    await protectedRequest("/api/security/google", { method: "DELETE" });
     await load();
   }
   function connectGoogle() {

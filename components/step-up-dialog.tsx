@@ -3,7 +3,7 @@
 import { startAuthentication } from "@simplewebauthn/browser";
 import { useState } from "react";
 
-import { ApiError, jsonRequest } from "@/lib/api/client";
+import { ApiError, protectedJsonRequest } from "@/lib/api/client";
 
 type OptionsResponse = { data: { challengeId: string; options: object } };
 
@@ -20,14 +20,14 @@ export function StepUpDialog({
     setLoading(true);
     setError(undefined);
     try {
-      const options = await jsonRequest<OptionsResponse>(
+      const options = await protectedJsonRequest<OptionsResponse>(
         "/api/step-up/passkey/options",
         {},
       );
       const response = await startAuthentication({
         optionsJSON: options.data.options as never,
       });
-      await jsonRequest("/api/step-up/passkey/verify", {
+      await protectedJsonRequest("/api/step-up/passkey/verify", {
         challengeId: options.data.challengeId,
         response,
       });

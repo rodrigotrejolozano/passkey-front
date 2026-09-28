@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 
 import { AuthNavigation } from "@/components/auth-navigation";
-import { apiRequest } from "@/lib/api/client";
+import { apiRequest, protectedRequest } from "@/lib/api/client";
 
 type ProfileResponse = { data: { displayName: string; createdAt: string } };
 
@@ -17,7 +17,7 @@ export default function ProfilePage() {
   }, []);
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await apiRequest("/api/security/profile", {
+    await protectedRequest("/api/security/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ displayName }),

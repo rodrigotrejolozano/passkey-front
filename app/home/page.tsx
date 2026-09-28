@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { AuthNavigation } from "@/components/auth-navigation";
-import { apiRequest, jsonRequest } from "@/lib/api/client";
+import { apiRequest, protectedJsonRequest } from "@/lib/api/client";
 
 type MeResponse = {
   data: { user: { displayName: string }; authMethod: "PASSKEY" | "GOOGLE" };
@@ -25,7 +25,7 @@ export default function AuthenticatedHome() {
   }, [router]);
 
   async function logout() {
-    await jsonRequest("/api/auth/logout", {});
+    await protectedJsonRequest("/api/auth/logout", {});
     router.replace("/");
   }
 

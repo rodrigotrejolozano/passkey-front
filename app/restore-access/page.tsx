@@ -4,7 +4,7 @@ import { startRegistration } from "@simplewebauthn/browser";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { ApiError, apiUrl, jsonRequest } from "@/lib/api/client";
+import { ApiError, apiUrl, protectedJsonRequest } from "@/lib/api/client";
 
 type RegistrationOptions = { data: { challengeId: string; options: object } };
 
@@ -16,17 +16,19 @@ export default function RestoreAccessPage() {
     setLoading(true);
     setError(undefined);
     try {
-      const options = await jsonRequest<RegistrationOptions>(
+      const options = await protectedJsonRequest<RegistrationOptions>(
         "/api/recovery/restore/passkey/options",
         {},
+        "recovery",
       );
       const response = await startRegistration({
         optionsJSON: options.data.options as never,
       });
-      await jsonRequest("/api/recovery/restore/passkey/verify", {
-        challengeId: options.data.challengeId,
-        response,
-      });
+      await protectedJsonRequest(
+        "/api/recovery/restore/passkey/verify",
+        { challengeId: options.data.challengeId, response },
+        "recovery",
+      );
       router.replace("/home");
     } catch (cause) {
       const browserError =
