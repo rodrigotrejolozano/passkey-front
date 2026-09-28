@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function RecoveryCodesDialog({
   codes,
@@ -11,15 +11,22 @@ export function RecoveryCodesDialog({
 }) {
   const confirmButton = useRef<HTMLButtonElement>(null);
   const content = codes.join("\n");
+  const [copyStatus, setCopyStatus] = useState<string>();
 
   useEffect(() => {
     confirmButton.current?.focus();
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") onConfirm();
+  }, []);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopyStatus("Codes copied.");
+    } catch {
+      setCopyStatus(
+        "Codes could not be copied. Download or save them manually.",
+      );
     }
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [onConfirm]);
+  }
 
   function download() {
     const url = URL.createObjectURL(
@@ -37,13 +44,12 @@ export function RecoveryCodesDialog({
       <h2 id="recovery-codes-title">Save your recovery codes</h2>
       <p>These single-use codes will not be shown again.</p>
       <pre>{content}</pre>
-      <button onClick={() => void navigator.clipboard.writeText(content)}>
-        Copy codes
-      </button>
+      <button onClick={() => void copy()}>Copy codes</button>
       <button onClick={download}>Download codes</button>
       <button ref={confirmButton} onClick={onConfirm}>
         I saved my codes
       </button>
+      {copyStatus && <p role="status">{copyStatus}</p>}
     </div>
   );
 }

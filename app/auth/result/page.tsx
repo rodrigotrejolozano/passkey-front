@@ -19,11 +19,13 @@ export default async function AuthResultPage({
           ? "/security/recovery?onboarding=1"
           : success
             ? "/home"
-            : accountRecovery
-              ? "/recovery/email"
-              : recoveryEmail
-                ? "/security/recovery"
-                : "/sign-in";
+            : recovery
+              ? "/restore-access"
+              : accountRecovery
+                ? "/recovery/email"
+                : recoveryEmail
+                  ? "/security/recovery"
+                  : "/sign-in";
   return (
     <main>
       <p className="eyebrow">
