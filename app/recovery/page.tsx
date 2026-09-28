@@ -69,6 +69,7 @@ export default function RecoveryPage() {
         <p>Recovery verified. You can now restore a sign-in method.</p>
       )}
       {error && <p role="alert">{error}</p>}
+      <Link href="/recovery/code">Use a recovery code</Link>
       <Link href="/sign-in">Back to sign in</Link>
     </main>
   );
