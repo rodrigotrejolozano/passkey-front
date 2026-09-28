@@ -48,6 +48,17 @@ export default function SignInMethodsPage() {
     await apiRequest(`/api/security/passkeys/${id}`, { method: "DELETE" });
     await load();
   }
+  async function renamePasskey(id: string) {
+    const current = passkeys.find((passkey) => passkey.id === id);
+    const name = window.prompt("Passkey name", current?.name);
+    if (!name?.trim()) return;
+    await apiRequest(`/api/security/passkeys/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    await load();
+  }
   async function disconnectGoogle() {
     await apiRequest("/api/security/google", { method: "DELETE" });
     await load();
@@ -67,6 +78,11 @@ export default function SignInMethodsPage() {
         <p key={passkey.id}>
           {passkey.name} · Created{" "}
           {new Date(passkey.createdAt).toLocaleDateString()}{" "}
+          <button
+            onClick={() => setAction(() => () => renamePasskey(passkey.id))}
+          >
+            Rename
+          </button>{" "}
           <button
             onClick={() => setAction(() => () => removePasskey(passkey.id))}
           >
