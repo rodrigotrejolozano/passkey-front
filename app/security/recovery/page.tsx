@@ -11,6 +11,7 @@ type RecoveryEmailResponse = {
 };
 type VerificationResponse = { data: { challengeId: string } };
 type RecoveryCodesResponse = { data: { codes: string[] } };
+type DeliveryMethod = "OTP" | "MAGIC_LINK";
 
 export default function RecoverySettingsPage() {
   const [configured, setConfigured] =
@@ -21,6 +22,8 @@ export default function RecoverySettingsPage() {
   const [action, setAction] = useState<() => Promise<void>>();
   const [editing, setEditing] = useState(false);
   const [codes, setCodes] = useState<string[]>();
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("OTP");
+  const [linkSent, setLinkSent] = useState(false);
   const load = () =>
     apiRequest<RecoveryEmailResponse>("/api/security/recovery-email").then(
       (result) => setConfigured(result.data.recoveryEmail),
@@ -31,9 +34,10 @@ export default function RecoverySettingsPage() {
   async function requestVerification() {
     const result = await jsonRequest<VerificationResponse>(
       "/api/security/recovery-email/verification",
-      { email },
+      { email, deliveryMethod },
     );
-    setChallengeId(result.data.challengeId);
+    if (deliveryMethod === "OTP") setChallengeId(result.data.challengeId);
+    else setLinkSent(true);
   }
   async function confirm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -86,9 +90,25 @@ export default function RecoverySettingsPage() {
             onChange={(event) => setEmail(event.target.value)}
             required
           />
+          <label htmlFor="delivery-method">Delivery method</label>
+          <select
+            id="delivery-method"
+            value={deliveryMethod}
+            onChange={(event) =>
+              setDeliveryMethod(event.target.value as DeliveryMethod)
+            }
+          >
+            <option value="OTP">Verification code</option>
+            <option value="MAGIC_LINK">Magic Link</option>
+          </select>
           <button onClick={() => setAction(() => requestVerification)}>
-            Send verification code
+            Send verification instructions
           </button>
+          {linkSent && (
+            <p>
+              Check your inbox. The verification link expires in five minutes.
+            </p>
+          )}
         </>
       )}
       {challengeId && (
