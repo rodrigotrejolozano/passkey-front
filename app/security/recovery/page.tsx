@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 
 import { AuthNavigation } from "@/components/auth-navigation";
+import { RecoveryCodesDialog } from "@/components/recovery-codes-dialog";
 import { StepUpDialog } from "@/components/step-up-dialog";
 import { apiRequest, jsonRequest } from "@/lib/api/client";
 
@@ -66,7 +68,12 @@ export default function RecoverySettingsPage() {
     <main>
       <AuthNavigation />
       <p className="eyebrow">ACCOUNT RECOVERY</p>
-      <h1>Recovery email</h1>
+      <h1>Protect your account</h1>
+      <p>
+        Add a verified recovery email and save recovery codes before you need
+        them.
+      </p>
+      <Link href="/home">Continue to Home</Link>
       {configured ? (
         <>
           <p>{configured.email} is verified.</p>
@@ -131,16 +138,10 @@ export default function RecoverySettingsPage() {
         Generate recovery codes
       </button>
       {codes && (
-        <section aria-label="Recovery codes">
-          <p>Save these codes now. They will not be shown again.</p>
-          <pre>{codes.join("\n")}</pre>
-          <button
-            onClick={() => void navigator.clipboard.writeText(codes.join("\n"))}
-          >
-            Copy codes
-          </button>
-          <button onClick={() => setCodes(undefined)}>I saved my codes</button>
-        </section>
+        <RecoveryCodesDialog
+          codes={codes}
+          onConfirm={() => setCodes(undefined)}
+        />
       )}
       {action && (
         <StepUpDialog

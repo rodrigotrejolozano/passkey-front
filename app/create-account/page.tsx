@@ -7,6 +7,9 @@ import { useState } from "react";
 import { ApiError, jsonRequest } from "@/lib/api/client";
 
 type RegistrationOptions = { data: { challengeId: string; options: object } };
+type RegistrationResult = {
+  data: { authenticated: boolean; isNewAccount: boolean };
+};
 
 export default function CreateAccountPage() {
   const router = useRouter();
@@ -26,11 +29,16 @@ export default function CreateAccountPage() {
       const response = await startRegistration({
         optionsJSON: options.data.options as never,
       });
-      await jsonRequest("/api/auth/passkey/registration/verify", {
-        challengeId: options.data.challengeId,
-        response,
-      });
-      router.push("/home");
+      const result = await jsonRequest<RegistrationResult>(
+        "/api/auth/passkey/registration/verify",
+        {
+          challengeId: options.data.challengeId,
+          response,
+        },
+      );
+      router.push(
+        result.data.isNewAccount ? "/security/recovery?onboarding=1" : "/home",
+      );
     } catch (cause) {
       setError(
         cause instanceof ApiError
