@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { AuthNavigation } from "@/components/auth-navigation";
 import { apiRequest, jsonRequest } from "@/lib/api/client";
 
 type MeResponse = {
@@ -30,12 +31,14 @@ export default function AuthenticatedHome() {
 
   return (
     <main>
+      <AuthNavigation />
       <p className="eyebrow">PASSWORDLESS</p>
       <h1>{name ? `Welcome, ${name}` : "Loading your security overview..."}</h1>
       <p>
-        {authMethod === "GOOGLE"
-          ? "Google verified your identity for this session."
-          : "Your Passkey protects this session."}
+        {authMethod === "GOOGLE" &&
+          "Google verified your identity for this session."}
+        {authMethod === "PASSKEY" && "Your Passkey protects this session."}
+        {!authMethod && "Checking your active sign-in method."}
       </p>
       <button onClick={logout}>Logout</button>
     </main>

@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { AuthNavigation } from "@/components/auth-navigation";
 import { apiRequest, jsonRequest } from "@/lib/api/client";
 
 type SessionsResponse = {
@@ -29,12 +29,13 @@ export default function SessionsPage() {
     await jsonRequest("/api/sessions/revoke-others", {});
     await load();
   }
+  async function revoke(id: string) {
+    await apiRequest(`/api/sessions/${id}`, { method: "DELETE" });
+    await load();
+  }
   return (
     <main>
-      <nav>
-        <Link href="/home">Home</Link>{" "}
-        <Link href="/security/sign-in">Sign-in methods</Link>
-      </nav>
+      <AuthNavigation />
       <p className="eyebrow">ACTIVE SESSIONS</p>
       <h1>Your devices</h1>
       {data?.sessions.map((session) => (
@@ -43,6 +44,9 @@ export default function SessionsPage() {
             ? "Current session"
             : (session.userAgent ?? "Unknown device")}{" "}
           · Last active {new Date(session.lastSeenAt).toLocaleString()}
+          {session.id !== data.currentSessionId && (
+            <button onClick={() => revoke(session.id)}>Revoke</button>
+          )}
         </p>
       ))}
       <button onClick={revokeOthers}>Revoke all other sessions</button>

@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 
+import { AuthNavigation } from "@/components/auth-navigation";
 import { apiRequest } from "@/lib/api/client";
 
 type ProfileResponse = { data: { displayName: string; createdAt: string } };
@@ -26,11 +26,7 @@ export default function ProfilePage() {
   }
   return (
     <main>
-      <nav>
-        <Link href="/home">Home</Link>{" "}
-        <Link href="/security/sign-in">Sign-in methods</Link>{" "}
-        <Link href="/security/sessions">Sessions</Link>
-      </nav>
+      <AuthNavigation />
       <p className="eyebrow">PROFILE</p>
       <h1>Your profile</h1>
       <form onSubmit={save}>

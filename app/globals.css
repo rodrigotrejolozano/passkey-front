@@ -28,6 +28,16 @@ p {
   margin: 0;
 }
 
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+nav a {
+  color: inherit;
+}
+
 .eyebrow {
   color: #22543d;
   font-size: 0.8rem;

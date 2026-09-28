@@ -1,9 +1,9 @@
 "use client";
 
 import { startRegistration } from "@simplewebauthn/browser";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { AuthNavigation } from "@/components/auth-navigation";
 import { StepUpDialog } from "@/components/step-up-dialog";
 import { apiRequest, jsonRequest } from "@/lib/api/client";
 
@@ -60,10 +60,7 @@ export default function SignInMethodsPage() {
   }
   return (
     <main>
-      <nav>
-        <Link href="/home">Home</Link>{" "}
-        <Link href="/security/sessions">Sessions</Link>
-      </nav>
+      <AuthNavigation />
       <p className="eyebrow">SIGN-IN METHODS</p>
       <h1>Passkeys</h1>
       {passkeys.map((passkey) => (
