@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { FocusError } from "@/components/focus-error";
 import { ApiError, jsonRequest } from "@/lib/api/client";
 
 type AuthenticationOptions = { data: { challengeId: string; options: object } };
@@ -57,7 +58,7 @@ export default function SignInPage() {
         Continue with Google
       </button>
       <Link href="/recovery">Can&apos;t access your account?</Link>
-      {error && <p role="alert">{error}</p>}
+      <FocusError message={error} />
     </main>
   );
 }

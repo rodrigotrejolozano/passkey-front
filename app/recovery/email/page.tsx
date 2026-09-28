@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
+import { FocusError } from "@/components/focus-error";
 import { ApiError, jsonRequest } from "@/lib/api/client";
 
 type DeliveryMethod = "OTP" | "MAGIC_LINK";
@@ -107,7 +108,7 @@ export default function RecoveryEmailPage() {
           expires in five minutes.
         </p>
       )}
-      {error && <p role="alert">{error}</p>}
+      <FocusError message={error} />
     </main>
   );
 }

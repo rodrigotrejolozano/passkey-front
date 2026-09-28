@@ -1,8 +1,9 @@
 "use client";
 
 import { startAuthentication } from "@simplewebauthn/browser";
-import { useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 
+import { FocusError } from "@/components/focus-error";
 import { ApiError, protectedJsonRequest } from "@/lib/api/client";
 
 type OptionsResponse = { data: { challengeId: string; options: object } };
@@ -16,6 +17,40 @@ export function StepUpDialog({
 }) {
   const [error, setError] = useState<string>();
   const [loading, setLoading] = useState(false);
+  const dialog = useRef<HTMLDivElement>(null);
+  const verifyButton = useRef<HTMLButtonElement>(null);
+  const cancelFromKeyboard = useEffectEvent(() => {
+    if (!loading) onCancel();
+  });
+
+  useEffect(() => {
+    const previousFocus = document.activeElement as HTMLElement | null;
+    verifyButton.current?.focus();
+    function handleKeyboard(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        cancelFromKeyboard();
+        return;
+      }
+      if (event.key !== "Tab" || !dialog.current) return;
+      const controls = Array.from(
+        dialog.current.querySelectorAll<HTMLElement>("button:not([disabled])"),
+      );
+      const first = controls[0];
+      const last = controls.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    }
+    document.addEventListener("keydown", handleKeyboard);
+    return () => {
+      document.removeEventListener("keydown", handleKeyboard);
+      previousFocus?.focus();
+    };
+  }, []);
   async function verify() {
     setLoading(true);
     setError(undefined);
@@ -43,16 +78,24 @@ export function StepUpDialog({
     }
   }
   return (
-    <div role="dialog" aria-modal="true">
-      <h2>Verify it is you</h2>
-      <p>Use one of your Passkeys to continue with this sensitive action.</p>
-      <button onClick={verify} disabled={loading}>
+    <div
+      ref={dialog}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="step-up-title"
+      aria-describedby="step-up-description"
+    >
+      <h2 id="step-up-title">Verify it is you</h2>
+      <p id="step-up-description">
+        Use one of your Passkeys to continue with this sensitive action.
+      </p>
+      <button ref={verifyButton} onClick={verify} disabled={loading}>
         {loading ? "Verifying..." : "Verify with Passkey"}
       </button>
       <button onClick={onCancel} disabled={loading}>
         Cancel
       </button>
-      {error && <p role="alert">{error}</p>}
+      <FocusError message={error} />
     </div>
   );
 }

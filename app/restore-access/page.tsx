@@ -4,6 +4,7 @@ import { startRegistration } from "@simplewebauthn/browser";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { FocusError } from "@/components/focus-error";
 import { ApiError, apiUrl, protectedJsonRequest } from "@/lib/api/client";
 
 type RegistrationOptions = { data: { challengeId: string; options: object } };
@@ -61,7 +62,7 @@ export default function RestoreAccessPage() {
       >
         Restore with Google
       </button>
-      {error && <p role="alert">{error}</p>}
+      <FocusError message={error} />
     </main>
   );
 }

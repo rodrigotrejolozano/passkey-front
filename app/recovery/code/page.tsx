@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
+import { FocusError } from "@/components/focus-error";
 import { ApiError, jsonRequest } from "@/lib/api/client";
 
 export default function RecoveryCodePage() {
@@ -45,7 +46,7 @@ export default function RecoveryCodePage() {
           {loading ? "Verifying..." : "Verify recovery code"}
         </button>
       </form>
-      {error && <p role="alert">{error}</p>}
+      <FocusError message={error} />
       <Link href="/recovery/email">Use recovery email instead</Link>
     </main>
   );
