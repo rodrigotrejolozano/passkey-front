@@ -4,7 +4,7 @@ import { startAuthentication } from "@simplewebauthn/browser";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { FocusError } from "@/components/focus-error";
-import { ApiError, protectedJsonRequest } from "@/lib/api/client";
+import { ApiError, apiUrl, protectedJsonRequest } from "@/lib/api/client";
 
 type OptionsResponse = { data: { challengeId: string; options: object } };
 
@@ -87,10 +87,18 @@ export function StepUpDialog({
     >
       <h2 id="step-up-title">Verify it is you</h2>
       <p id="step-up-description">
-        Use one of your Passkeys to continue with this sensitive action.
+        Verify with a Passkey or your linked Google account to continue.
       </p>
       <button ref={verifyButton} onClick={verify} disabled={loading}>
         {loading ? "Verifying..." : "Verify with Passkey"}
+      </button>
+      <button
+        onClick={() =>
+          window.location.assign(apiUrl("/api/step-up/google/start"))
+        }
+        disabled={loading}
+      >
+        Verify with Google
       </button>
       <button onClick={onCancel} disabled={loading}>
         Cancel

@@ -8,10 +8,12 @@ export default async function AuthResultPage({
   const parameters = await searchParams;
   const success = parameters.status === "success";
   const recovery = parameters.flow === "recovery";
+  const stepUp = parameters.flow === "step-up";
   const accountRecovery = parameters.flow === "account-recovery";
   const recoveryEmail = parameters.flow === "recovery-email";
-  const destination =
-    success && accountRecovery
+  const destination = stepUp
+    ? "/security/sign-in"
+    : success && accountRecovery
       ? "/restore-access"
       : success && recoveryEmail
         ? "/security/recovery"
@@ -31,17 +33,21 @@ export default async function AuthResultPage({
       <p className="eyebrow">
         {recovery || accountRecovery || recoveryEmail
           ? "ACCOUNT RECOVERY"
-          : "GOOGLE"}
+          : stepUp
+            ? "SECURITY CHECK"
+            : "GOOGLE"}
       </p>
       <h1>
         {success
-          ? accountRecovery
-            ? "Recovery email verified."
-            : recoveryEmail
-              ? "Your recovery email is verified."
-              : recovery
-                ? "Your Google account can now sign you in."
-                : "Authentication complete."
+          ? stepUp
+            ? "Identity verification complete. Repeat your security action."
+            : accountRecovery
+              ? "Recovery email verified."
+              : recoveryEmail
+                ? "Your recovery email is verified."
+                : recovery
+                  ? "Your Google account can now sign you in."
+                  : "Authentication complete."
           : "Authentication could not be completed."}
       </h1>
       <Link href={destination}>{success ? "Continue" : "Try again"}</Link>
