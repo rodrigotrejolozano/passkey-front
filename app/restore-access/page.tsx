@@ -29,11 +29,13 @@ export default function RestoreAccessPage() {
       });
       router.replace("/home");
     } catch (cause) {
-      setError(
-        cause instanceof ApiError
-          ? cause.message
-          : "Passkey restoration could not be completed.",
-      );
+      const browserError =
+        cause instanceof DOMException && cause.name === "NotAllowedError"
+          ? "Passkey creation was cancelled or timed out."
+          : cause instanceof DOMException && cause.name === "InvalidStateError"
+            ? "This device already has a Passkey for this account."
+            : "Passkey restoration could not be completed.";
+      setError(cause instanceof ApiError ? cause.message : browserError);
     } finally {
       setLoading(false);
     }
