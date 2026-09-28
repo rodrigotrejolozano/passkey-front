@@ -6,6 +6,7 @@ export function AuthNavigation() {
       <Link href="/home">Home</Link>
       <Link href="/security/sign-in">Sign-in methods</Link>
       <Link href="/security/sessions">Sessions</Link>
+      <Link href="/security/recovery">Recovery</Link>
       <Link href="/profile">Profile</Link>
     </nav>
   );
