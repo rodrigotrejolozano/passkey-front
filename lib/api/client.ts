@@ -17,11 +17,15 @@ type ApiErrorResponse = {
 
 const apiOrigin = process.env.NEXT_PUBLIC_API_ORIGIN ?? "http://localhost:3001";
 
+export function apiUrl(path: string): string {
+  return new URL(path, apiOrigin).toString();
+}
+
 export async function apiRequest<T>(
   path: string,
   init: RequestInit = {},
 ): Promise<T> {
-  const response = await fetch(new URL(path, apiOrigin), {
+  const response = await fetch(apiUrl(path), {
     ...init,
     credentials: "include",
     headers: {

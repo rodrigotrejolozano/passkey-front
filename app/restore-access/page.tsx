@@ -4,7 +4,7 @@ import { startRegistration } from "@simplewebauthn/browser";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { ApiError, jsonRequest } from "@/lib/api/client";
+import { ApiError, apiUrl, jsonRequest } from "@/lib/api/client";
 
 type RegistrationOptions = { data: { challengeId: string; options: object } };
 
@@ -50,6 +50,14 @@ export default function RestoreAccessPage() {
       </p>
       <button onClick={restore} disabled={loading}>
         {loading ? "Creating Passkey..." : "Create Passkey"}
+      </button>
+      <button
+        onClick={() =>
+          window.location.assign(apiUrl("/api/recovery/google/start"))
+        }
+        disabled={loading}
+      >
+        Restore with Google
       </button>
       {error && <p role="alert">{error}</p>}
     </main>
