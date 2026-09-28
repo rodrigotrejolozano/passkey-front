@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
 
+const apiOrigin = process.env.PLAYWRIGHT_API_ORIGIN ?? "http://localhost:3001";
+
 test("authenticated home loads and logs out with CSRF", async ({ page }) => {
-  await page.route("http://localhost:3001/api/auth/me", async (route) => {
+  await page.route(`${apiOrigin}/api/auth/me`, async (route) => {
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -13,14 +15,14 @@ test("authenticated home loads and logs out with CSRF", async ({ page }) => {
       }),
     });
   });
-  await page.route("http://localhost:3001/api/auth/csrf", async (route) => {
+  await page.route(`${apiOrigin}/api/auth/csrf`, async (route) => {
     await route.fulfill({
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({ data: { csrfToken: "test-csrf-value" } }),
     });
   });
-  await page.route("http://localhost:3001/api/auth/logout", async (route) => {
+  await page.route(`${apiOrigin}/api/auth/logout`, async (route) => {
     expect(route.request().headers()["x-csrf-token"]).toBe("test-csrf-value");
     await route.fulfill({
       status: 200,
@@ -38,7 +40,7 @@ test("authenticated home loads and logs out with CSRF", async ({ page }) => {
 });
 
 test("authenticated navigation fits the viewport", async ({ page }) => {
-  await page.route("http://localhost:3001/api/auth/me", async (route) => {
+  await page.route(`${apiOrigin}/api/auth/me`, async (route) => {
     await route.fulfill({
       status: 200,
       contentType: "application/json",

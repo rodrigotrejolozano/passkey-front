@@ -3,7 +3,12 @@ import Link from "next/link";
 export default async function AuthResultPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; flow?: string; new?: string }>;
+  searchParams: Promise<{
+    status?: string;
+    flow?: string;
+    new?: string;
+    source?: string;
+  }>;
 }) {
   const parameters = await searchParams;
   const success = parameters.status === "success";
@@ -12,7 +17,9 @@ export default async function AuthResultPage({
   const accountRecovery = parameters.flow === "account-recovery";
   const recoveryEmail = parameters.flow === "recovery-email";
   const destination = stepUp
-    ? "/security/sign-in"
+    ? parameters.source === "recovery"
+      ? "/security/recovery"
+      : "/security/sign-in"
     : success && accountRecovery
       ? "/restore-access"
       : success && recoveryEmail

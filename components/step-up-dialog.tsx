@@ -37,6 +37,12 @@ export function StepUpDialog({
       );
       const first = controls[0];
       const last = controls.at(-1);
+      if (!controls.includes(document.activeElement as HTMLElement)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first)?.focus();
+        if (!first) dialog.current.focus();
+        return;
+      }
       if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last?.focus();
@@ -82,6 +88,7 @@ export function StepUpDialog({
       ref={dialog}
       role="dialog"
       aria-modal="true"
+      tabIndex={-1}
       aria-labelledby="step-up-title"
       aria-describedby="step-up-description"
     >
@@ -93,9 +100,14 @@ export function StepUpDialog({
         {loading ? "Verifying..." : "Verify with Passkey"}
       </button>
       <button
-        onClick={() =>
-          window.location.assign(apiUrl("/api/step-up/google/start"))
-        }
+        onClick={() => {
+          const source = window.location.pathname.includes("/recovery")
+            ? "recovery"
+            : "sign-in";
+          window.location.assign(
+            apiUrl(`/api/step-up/google/start?source=${source}`),
+          );
+        }}
         disabled={loading}
       >
         Verify with Google

@@ -58,14 +58,20 @@ type CsrfScope = "session" | "recovery";
 type CsrfResponse = { data: { csrfToken: string } };
 
 const csrfTokens: Partial<Record<CsrfScope, string>> = {};
+const csrfRequests: Partial<Record<CsrfScope, Promise<string>>> = {};
 
 async function getCsrfToken(scope: CsrfScope): Promise<string> {
   if (csrfTokens[scope]) return csrfTokens[scope];
+  if (csrfRequests[scope]) return csrfRequests[scope];
   const endpoint =
     scope === "session" ? "/api/auth/csrf" : "/api/recovery/csrf";
-  const result = await apiRequest<CsrfResponse>(endpoint);
-  csrfTokens[scope] = result.data.csrfToken;
-  return result.data.csrfToken;
+  csrfRequests[scope] = apiRequest<CsrfResponse>(endpoint)
+    .then((result) => {
+      csrfTokens[scope] = result.data.csrfToken;
+      return result.data.csrfToken;
+    })
+    .finally(() => delete csrfRequests[scope]);
+  return csrfRequests[scope];
 }
 
 export async function protectedRequest<T>(

@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+const apiOrigin = process.env.PLAYWRIGHT_API_ORIGIN ?? "http://localhost:3001";
+
 test("public navigation exposes passwordless entry points", async ({
   page,
 }) => {
@@ -27,16 +29,13 @@ test("recovery chooser reaches email and code methods", async ({ page }) => {
 test("public email request remains neutral for Magic Link", async ({
   page,
 }) => {
-  await page.route(
-    "http://localhost:3001/api/recovery/request",
-    async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ data: { accepted: true } }),
-      });
-    },
-  );
+  await page.route(`${apiOrigin}/api/recovery/request`, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ data: { accepted: true } }),
+    });
+  });
   await page.goto("/recovery/email");
   await page.getByLabel("Recovery email").fill("unknown@example.test");
   await page.getByLabel("Delivery method").selectOption("MAGIC_LINK");

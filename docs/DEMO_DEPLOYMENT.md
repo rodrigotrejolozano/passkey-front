@@ -11,7 +11,9 @@
 After deployment, run:
 
 ```bash
-PLAYWRIGHT_BASE_URL=https://app.<ROOT_DOMAIN> npm run test:e2e
+PLAYWRIGHT_BASE_URL=https://app.<ROOT_DOMAIN> \
+PLAYWRIGHT_API_ORIGIN=https://api.<ROOT_DOMAIN> \
+npm run test:e2e
 ```
 
 The automated suite uses controlled API doubles. Complete a separate manual
