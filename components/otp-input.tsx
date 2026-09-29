@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { useTranslations } from "next-intl";
 
 type OtpInputProps = {
   value: string;
@@ -11,6 +12,7 @@ type OtpInputProps = {
 const digits = Array.from({ length: 6 });
 
 export function OtpInput({ value, onChange, error = false }: OtpInputProps) {
+  const t = useTranslations("common");
   const inputs = useRef<Array<HTMLInputElement | null>>([]);
   const values = value.padEnd(6, " ").slice(0, 6).split("");
 
@@ -35,7 +37,9 @@ export function OtpInput({ value, onChange, error = false }: OtpInputProps) {
 
   return (
     <fieldset className="grid gap-2" aria-describedby="recovery-code-hint">
-      <legend className="text-sm font-semibold text-ink">Recovery code</legend>
+      <legend className="text-sm font-semibold text-ink">
+        {t("recoveryCode")}
+      </legend>
       <div className="grid grid-cols-6 gap-2 sm:gap-3">
         {digits.map((_, index) => (
           <input
@@ -43,7 +47,7 @@ export function OtpInput({ value, onChange, error = false }: OtpInputProps) {
             ref={(element) => {
               inputs.current[index] = element;
             }}
-            aria-label={`Recovery code digit ${index + 1}`}
+            aria-label={t("recoveryCodeDigit", { number: index + 1 })}
             inputMode="numeric"
             autoComplete={index === 0 ? "one-time-code" : "off"}
             maxLength={6}

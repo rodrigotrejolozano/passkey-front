@@ -1,6 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
 import { vi } from "vitest";
 
+import messages from "@/messages/en.json";
 import { StepUpDialog } from "./step-up-dialog";
 
 describe("StepUpDialog", () => {
@@ -14,11 +16,16 @@ describe("StepUpDialog", () => {
       ),
     );
 
-    render(<StepUpDialog onVerified={vi.fn()} onCancel={vi.fn()} />);
+    render(
+      <NextIntlClientProvider locale="en" messages={messages}>
+        <StepUpDialog onVerified={vi.fn()} onCancel={vi.fn()} />
+      </NextIntlClientProvider>,
+    );
 
-    expect(
-      await screen.findByRole("button", { name: "Verify with Google" }),
-    ).toHaveFocus();
+    const googleButton = await screen.findByRole("button", {
+      name: "Verify with Google",
+    });
+    await waitFor(() => expect(googleButton).toHaveFocus());
     expect(
       screen.queryByRole("button", { name: "Verify with Passkey" }),
     ).not.toBeInTheDocument();

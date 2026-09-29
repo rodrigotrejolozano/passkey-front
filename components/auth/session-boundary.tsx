@@ -2,14 +2,16 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useEffectEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { ApiError, apiRequest } from "@/lib/api/client";
+import { useRouter } from "@/i18n/navigation";
 
 const SESSION_INVALID_EVENT = "passkey:session-invalid";
 
 export function SessionBoundary({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const t = useTranslations("common");
   const [checking, setChecking] = useState(true);
   const [invalid, setInvalid] = useState(false);
 
@@ -56,7 +58,7 @@ export function SessionBoundary({ children }: { children: ReactNode }) {
             aria-hidden="true"
           />
           <p className="text-sm font-medium text-muted">
-            Checking your session
+            {t("checkingSession")}
           </p>
         </div>
       </section>

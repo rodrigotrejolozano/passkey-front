@@ -1,8 +1,8 @@
 "use client";
 
 import { startRegistration } from "@simplewebauthn/browser";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Fingerprint, RefreshCw } from "lucide-react";
 
@@ -11,11 +11,15 @@ import { AuthPortal } from "@/components/layout/auth-portal";
 import { ApiError, apiUrl, protectedJsonRequest } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Link, useRouter } from "@/i18n/navigation";
 
 type RegistrationOptions = { data: { challengeId: string; options: object } };
 
 export default function RestoreAccessPage() {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations("recovery");
+  const common = useTranslations("common");
   const [error, setError] = useState<string>();
   const [loading, setLoading] = useState(false);
   async function restore() {
@@ -56,29 +60,30 @@ export default function RestoreAccessPage() {
             <RefreshCw className="size-5" aria-hidden="true" />
           </div>
           <p className="mt-6 text-xs font-bold tracking-[0.16em] text-brand-700">
-            RESTORE ACCESS
+            {t("restoreEyebrow")}
           </p>
           <h1 className="mt-3 text-2xl font-bold tracking-tight text-ink">
-            Create a new Passkey
+            {t("restoreTitle")}
           </h1>
           <p className="mt-2 text-sm leading-6 text-muted">
-            Your recovery verification is valid for a limited time. Create a new
-            Passkey to regain normal access.
+            {t("restoreDescription")}
           </p>
           <div className="mt-7 grid gap-3">
             <Button onClick={restore} loading={loading} className="w-full">
               <Fingerprint className="size-4" aria-hidden="true" />
-              {loading ? "Creating Passkey..." : "Create Passkey"}
+              {loading ? common("loading") : t("restorePasskey")}
             </Button>
             <Button
               variant="secondary"
               onClick={() =>
-                window.location.assign(apiUrl("/api/recovery/google/start"))
+                window.location.assign(
+                  apiUrl(`/api/recovery/google/start?locale=${locale}`),
+                )
               }
               disabled={loading}
               className="w-full"
             >
-              Restore with Google
+              {t("restoreGoogle")}
             </Button>
             <FocusError message={error} />
           </div>
@@ -86,7 +91,7 @@ export default function RestoreAccessPage() {
             href="/sign-in"
             className="mt-6 block text-center text-sm font-semibold text-brand-700 hover:text-brand-800"
           >
-            Back to sign in
+            {common("backToSignIn")}
           </Link>
         </Card>
       </div>

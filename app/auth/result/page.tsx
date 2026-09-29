@@ -1,8 +1,9 @@
-import Link from "next/link";
 import { CheckCircle2, CircleX } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { PublicShell } from "@/components/layout/public-shell";
 import { Card } from "@/components/ui/card";
+import { Link } from "@/i18n/navigation";
 
 export default async function AuthResultPage({
   searchParams,
@@ -16,6 +17,8 @@ export default async function AuthResultPage({
   }>;
 }) {
   const parameters = await searchParams;
+  const t = await getTranslations("result");
+  const common = await getTranslations("common");
   const success = parameters.status === "success";
   const recovery = parameters.flow === "recovery";
   const stepUp = parameters.flow === "step-up";
@@ -66,35 +69,35 @@ export default async function AuthResultPage({
           </div>
           <p className="mt-6 text-xs font-bold tracking-[0.16em] text-brand-700">
             {recovery || accountRecovery || recoveryEmail
-              ? "ACCOUNT RECOVERY"
+              ? t("recovery")
               : stepUp
-                ? "SECURITY CHECK"
-                : "GOOGLE"}
+                ? t("securityCheck")
+                : t("google")}
           </p>
           <h1 className="mt-3 text-2xl font-bold tracking-tight text-ink">
             {googleAlreadyLinked
-              ? "This Google account is already linked to another user."
+              ? t("linked")
               : googleAccountMismatch
-                ? "Use the Google account linked to this user."
+                ? t("mismatch")
                 : success
                   ? stepUp
                     ? parameters.source === "recovery"
-                      ? "Identity verification complete. Continue to finish your security action."
-                      : "Identity verification complete. Repeat your security action."
+                      ? t("stepUpRecovery")
+                      : t("stepUp")
                     : accountRecovery
-                      ? "Recovery email verified."
+                      ? t("recoveryVerified")
                       : recoveryEmail
-                        ? "Your recovery email is verified."
+                        ? t("recoveryEmailVerified")
                         : recovery
-                          ? "Your Google account can now sign you in."
-                          : "Authentication complete."
-                  : "Authentication could not be completed."}
+                          ? t("googleRecovered")
+                          : t("complete")
+                  : t("failed")}
           </h1>
           <Link
             href={destination}
             className={`mt-7 inline-flex min-h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-semibold shadow-sm transition-colors ${success ? "bg-brand-700 text-white hover:bg-brand-800" : "bg-danger-600 text-white hover:bg-danger-700"}`}
           >
-            {success ? "Continue" : "Try again"}
+            {success ? common("continue") : common("tryAgain")}
           </Link>
         </Card>
       </div>

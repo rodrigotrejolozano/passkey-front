@@ -4,7 +4,11 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: { "@": new URL(".", import.meta.url).pathname },
+    alias: {
+      "@": new URL(".", import.meta.url).pathname,
+      "next/navigation": new URL("./test/next-navigation.ts", import.meta.url)
+        .pathname,
+    },
   },
   test: {
     environment: "jsdom",

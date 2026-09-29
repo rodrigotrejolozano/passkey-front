@@ -1,6 +1,7 @@
 "use client";
 
 import { startAuthentication } from "@simplewebauthn/browser";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { FocusError } from "@/components/focus-error";
@@ -25,6 +26,9 @@ export function StepUpDialog({
   onGoogleRedirect?: () => void;
 }) {
   const [error, setError] = useState<string>();
+  const locale = useLocale();
+  const t = useTranslations("stepUp");
+  const common = useTranslations("common");
   const [loading, setLoading] = useState(false);
   const [methods, setMethods] = useState<MethodsResponse["data"]>();
   const dialog = useRef<HTMLDivElement>(null);
@@ -125,25 +129,25 @@ export function StepUpDialog({
       >
         <div className="grid gap-2">
           <p className="text-xs font-bold tracking-[0.14em] text-brand-700">
-            SECURITY CHECK
+            {t("eyebrow")}
           </p>
           <h2 id="step-up-title" className="text-xl font-bold text-ink">
-            Verify it is you
+            {t("title")}
           </h2>
           <p id="step-up-description" className="text-sm leading-6 text-muted">
             {methods?.passkey && methods.google
-              ? "Verify with a Passkey or your linked Google account to continue."
+              ? t("both")
               : methods?.passkey
-                ? "Verify with one of your Passkeys to continue."
+                ? t("passkey")
                 : methods?.google
-                  ? "Verify with your linked Google account to continue."
-                  : "Loading your verification methods."}
+                  ? t("google")
+                  : t("loading")}
           </p>
         </div>
         <div className="grid gap-2">
           {methods?.passkey && (
             <Button ref={verifyButton} onClick={verify} loading={loading}>
-              {loading ? "Verifying..." : "Verify with Passkey"}
+              {loading ? common("verifying") : t("verifyPasskey")}
             </Button>
           )}
           {methods?.google && (
@@ -156,16 +160,18 @@ export function StepUpDialog({
                   ? "recovery"
                   : "sign-in";
                 window.location.assign(
-                  apiUrl(`/api/step-up/google/start?source=${source}`),
+                  apiUrl(
+                    `/api/step-up/google/start?source=${source}&locale=${locale}`,
+                  ),
                 );
               }}
               disabled={loading}
             >
-              Verify with Google
+              {t("verifyGoogle")}
             </Button>
           )}
           <Button variant="danger" onClick={onCancel} disabled={loading}>
-            Cancel
+            {common("cancel")}
           </Button>
         </div>
         <FocusError message={error} />

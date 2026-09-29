@@ -1,6 +1,7 @@
 "use client";
 
 import { Laptop, LogOut, ShieldCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { SettingsShell } from "@/components/layout/settings-shell";
@@ -28,13 +29,12 @@ type SessionsResponse = {
   };
 };
 
-function errorMessage(cause: unknown) {
-  return cause instanceof ApiError
-    ? cause.message
-    : "Your sessions could not be updated. Please try again.";
+function errorMessage(cause: unknown, fallback: string) {
+  return cause instanceof ApiError ? cause.message : fallback;
 }
 
 export default function SessionsPage() {
+  const t = useTranslations("sessions");
   const [data, setData] = useState<SessionsResponse["data"]>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
@@ -47,7 +47,7 @@ export default function SessionsPage() {
       const result = await apiRequest<SessionsResponse>("/api/sessions");
       setData(result.data);
     } catch (cause) {
-      setError(errorMessage(cause));
+      setError(errorMessage(cause, t("error")));
     } finally {
       setLoading(false);
     }
@@ -65,7 +65,7 @@ export default function SessionsPage() {
       await protectedJsonRequest("/api/sessions/revoke-others", {});
       await load();
     } catch (cause) {
-      setError(errorMessage(cause));
+      setError(errorMessage(cause, t("error")));
     } finally {
       setRevoking(undefined);
     }
@@ -78,7 +78,7 @@ export default function SessionsPage() {
       await protectedRequest(`/api/sessions/${id}`, { method: "DELETE" });
       await load();
     } catch (cause) {
-      setError(errorMessage(cause));
+      setError(errorMessage(cause, t("error")));
     } finally {
       setRevoking(undefined);
     }
@@ -92,13 +92,11 @@ export default function SessionsPage() {
     <SettingsShell>
       <div className="grid gap-6">
         <section className="grid gap-2">
-          <p className="eyebrow">ACTIVE SESSIONS</p>
+          <p className="eyebrow">{t("eyebrow")}</p>
           <h1 className="text-3xl font-bold tracking-tight text-ink">
-            Your devices
+            {t("title")}
           </h1>
-          <p className="leading-7 text-muted">
-            Review and remove devices that no longer need access.
-          </p>
+          <p className="leading-7 text-muted">{t("description")}</p>
         </section>
 
         {error && (
@@ -110,9 +108,9 @@ export default function SessionsPage() {
         <Card className="grid gap-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="grid gap-1">
-              <h2 className="text-lg font-bold text-ink">Active sessions</h2>
+              <h2 className="text-lg font-bold text-ink">{t("activeTitle")}</h2>
               <p className="text-sm leading-6 text-muted">
-                Your current session remains available on this device.
+                {t("currentAvailable")}
               </p>
             </div>
             {otherSessions.length > 0 && (
@@ -123,7 +121,7 @@ export default function SessionsPage() {
                 disabled={Boolean(revoking)}
                 onClick={() => void revokeOthers()}
               >
-                Revoke all other sessions
+                {t("revokeOthers")}
               </Button>
             )}
           </div>
@@ -153,17 +151,18 @@ export default function SessionsPage() {
                       <div className="min-w-0">
                         <p className="truncate font-semibold text-ink">
                           {current
-                            ? "Current session"
-                            : (session.userAgent ?? "Unknown device")}
+                            ? t("currentSession")
+                            : (session.userAgent ?? t("unknownDevice"))}
                         </p>
                         <p className="text-sm text-muted">
-                          Last active{" "}
-                          {new Date(session.lastSeenAt).toLocaleString()}
+                          {t("lastActive", {
+                            date: new Date(session.lastSeenAt).toLocaleString(),
+                          })}
                         </p>
                       </div>
                     </div>
                     {current ? (
-                      <Badge>Current</Badge>
+                      <Badge>{t("current")}</Badge>
                     ) : (
                       <Button
                         variant="ghost"
@@ -173,7 +172,7 @@ export default function SessionsPage() {
                         onClick={() => void revoke(session.id)}
                       >
                         <LogOut className="size-4" aria-hidden="true" />
-                        Revoke
+                        {t("revoke")}
                       </Button>
                     )}
                   </li>
@@ -182,8 +181,8 @@ export default function SessionsPage() {
             </ul>
           ) : data ? (
             <EmptyState
-              title="No active sessions"
-              description="There are no devices with active access to your account."
+              title={t("emptyTitle")}
+              description={t("emptyDescription")}
             />
           ) : null}
         </Card>

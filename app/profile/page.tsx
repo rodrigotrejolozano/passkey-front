@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { SettingsShell } from "@/components/layout/settings-shell";
 import { Alert } from "@/components/ui/alert";
@@ -12,13 +13,12 @@ import { ApiError, apiRequest, protectedRequest } from "@/lib/api/client";
 
 type ProfileResponse = { data: { displayName: string; createdAt: string } };
 
-function errorMessage(cause: unknown) {
-  return cause instanceof ApiError
-    ? cause.message
-    : "Your profile could not be updated. Please try again.";
+function errorMessage(cause: unknown, fallback: string) {
+  return cause instanceof ApiError ? cause.message : fallback;
 }
 
 export default function ProfilePage() {
+  const t = useTranslations("profile");
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(true);
   const [loaded, setLoaded] = useState(false);
@@ -33,11 +33,7 @@ export default function ProfilePage() {
         setLoaded(true);
       })
       .catch((cause) =>
-        setError(
-          cause instanceof ApiError
-            ? cause.message
-            : "Your profile could not be loaded. Please try again.",
-        ),
+        setError(cause instanceof ApiError ? cause.message : t("loadError")),
       )
       .finally(() => setLoading(false));
   }, []);
@@ -55,7 +51,7 @@ export default function ProfilePage() {
       });
       setSaved(true);
     } catch (cause) {
-      setError(errorMessage(cause));
+      setError(errorMessage(cause, t("saveError")));
     } finally {
       setSaving(false);
     }
@@ -65,13 +61,11 @@ export default function ProfilePage() {
     <SettingsShell>
       <div className="grid w-full gap-6">
         <section className="grid gap-2">
-          <p className="eyebrow">PROFILE</p>
+          <p className="eyebrow">{t("eyebrow")}</p>
           <h1 className="text-3xl font-bold tracking-tight text-ink">
-            Your profile
+            {t("title")}
           </h1>
-          <p className="leading-7 text-muted">
-            Keep your account details accurate and recognizable.
-          </p>
+          <p className="leading-7 text-muted">{t("description")}</p>
         </section>
 
         <Card>
@@ -90,7 +84,7 @@ export default function ProfilePage() {
               )}
               <Field
                 id="displayName"
-                label="Display name"
+                label={t("displayName")}
                 value={displayName}
                 onChange={(event) => {
                   setDisplayName(event.target.value);
@@ -100,14 +94,14 @@ export default function ProfilePage() {
               />
               <div className="flex flex-wrap items-center gap-3">
                 <Button type="submit" loading={saving}>
-                  Save changes
+                  {t("save")}
                 </Button>
-                {saved && <p role="status">Profile updated.</p>}
+                {saved && <p role="status">{t("saved")}</p>}
               </div>
             </form>
           ) : (
             <Alert tone="error" role="alert">
-              {error ?? "Your profile could not be loaded. Please try again."}
+              {error ?? t("loadError")}
             </Alert>
           )}
         </Card>

@@ -1,10 +1,9 @@
 "use client";
 
 import { startRegistration } from "@simplewebauthn/browser";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Fingerprint, UserRound } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { FocusError } from "@/components/focus-error";
 import { PublicAuthGuard } from "@/components/auth/public-auth-guard";
@@ -13,6 +12,7 @@ import { ApiError, jsonRequest } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { GoogleMark } from "@/components/google-mark";
+import { Link, useRouter } from "@/i18n/navigation";
 
 type RegistrationOptions = { data: { challengeId: string; options: object } };
 type RegistrationResult = {
@@ -21,6 +21,9 @@ type RegistrationResult = {
 
 export default function CreateAccountPage() {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations("auth");
+  const common = useTranslations("common");
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -66,51 +69,51 @@ export default function CreateAccountPage() {
             <UserRound className="size-5" aria-hidden="true" />
           </div>
           <p className="mt-6 text-xs font-bold tracking-[0.16em] text-brand-700">
-            CREATE ACCOUNT
+            {t("createAccountEyebrow")}
           </p>
           <h1 className="mt-3 text-2xl font-bold tracking-tight text-ink">
-            Choose how you want to sign in.
+            {t("createAccountTitle")}
           </h1>
           <p className="mt-2 text-sm leading-6 text-muted">
-            Start with a passkey for secure, password-free access.
+            {t("createAccountDescription")}
           </p>
           <div className="mt-7 grid gap-4">
             <Field
               id="name"
-              label="Name"
+              label={t("name")}
               value={name}
               onChange={(event) => setName(event.target.value)}
               autoComplete="name"
             />
             <Button onClick={register} loading={loading} className="w-full">
               <Fingerprint className="size-4" aria-hidden="true" />
-              {loading ? "Creating passkey..." : "Continue with Passkey"}
+              {loading ? common("loading") : t("continuePasskey")}
             </Button>
             <div className="flex items-center gap-3 text-xs font-medium text-muted">
               <span className="h-px flex-1 bg-line" />
-              or
+              {common("or")}
               <span className="h-px flex-1 bg-line" />
             </div>
             <Button
               variant="secondary"
               onClick={() =>
-                (window.location.href = `${process.env.NEXT_PUBLIC_API_ORIGIN ?? "http://localhost:3001"}/api/auth/google/start`)
+                (window.location.href = `${process.env.NEXT_PUBLIC_API_ORIGIN ?? "http://localhost:3001"}/api/auth/google/start?locale=${locale}`)
               }
               disabled={loading}
               className="w-full"
             >
               <GoogleMark />
-              Continue with Google
+              {t("continueGoogle")}
             </Button>
             <FocusError message={error} />
           </div>
           <p className="mt-6 text-center text-sm text-muted">
-            Already have an account?{" "}
+            {t("alreadyAccount")}{" "}
             <Link
               href="/sign-in"
               className="font-semibold text-brand-700 hover:text-brand-800"
             >
-              Sign in
+              {t("signIn")}
             </Link>
           </p>
         </section>

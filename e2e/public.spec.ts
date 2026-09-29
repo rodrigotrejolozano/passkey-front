@@ -2,10 +2,10 @@ import { expect, test } from "@playwright/test";
 
 const apiOrigin = process.env.PLAYWRIGHT_API_ORIGIN ?? "http://localhost:3001";
 
-test("public navigation exposes passwordless entry points", async ({
+test("English public navigation exposes passwordless entry points", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/en");
   await expect(
     page.getByRole("heading", { name: "Authentication without passwords." }),
   ).toBeVisible();
@@ -20,9 +20,9 @@ test("desktop access portal fits within the viewport", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "chromium", "Desktop-only layout check");
-  await page.goto("/sign-in");
+  await page.goto("/es/sign-in");
   await expect(
-    page.getByRole("heading", { name: "Sign in without a password." }),
+    page.getByRole("heading", { name: "Inicia sesión sin contraseña." }),
   ).toBeVisible();
   const hasVerticalOverflow = await page.evaluate(
     () => document.documentElement.scrollHeight > window.innerHeight,
@@ -31,13 +31,13 @@ test("desktop access portal fits within the viewport", async ({
 });
 
 test("recovery chooser reaches email and code methods", async ({ page }) => {
-  await page.goto("/recovery");
+  await page.goto("/es/recovery");
   await expect(
-    page.getByRole("heading", { name: "Choose a recovery method" }),
+    page.getByRole("heading", { name: "Elige un método de recuperación" }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Use recovery email" }).click();
-  await expect(page).toHaveURL(/\/recovery\/email$/);
-  await expect(page.getByLabel("Delivery method")).toBeVisible();
+  await page.getByRole("link", { name: "Usar correo de recuperación" }).click();
+  await expect(page).toHaveURL(/\/es\/recovery\/email$/);
+  await expect(page.getByLabel("Método de entrega")).toBeVisible();
 });
 
 test("public email request remains neutral for Magic Link", async ({
@@ -50,60 +50,59 @@ test("public email request remains neutral for Magic Link", async ({
       body: JSON.stringify({ data: { accepted: true } }),
     });
   });
-  await page.goto("/recovery/email");
-  await page.getByLabel("Recovery email").fill("unknown@example.test");
-  await page.getByLabel("Delivery method").selectOption("MAGIC_LINK");
+  await page.goto("/es/recovery/email");
+  await page.getByLabel("Correo de recuperación").fill("unknown@example.test");
+  await page.getByLabel("Método de entrega").selectOption("MAGIC_LINK");
   await page
-    .getByRole("button", { name: "Send recovery instructions" })
+    .getByRole("button", { name: "Enviar instrucciones de recuperación" })
     .click();
   await expect(
-    page.getByText(/If an eligible account exists, a secure link was sent/),
+    page.getByText(/Si existe una cuenta elegible, se envió un enlace seguro/),
   ).toBeVisible();
   await expect(page.getByText("unknown@example.test")).toBeVisible();
 });
 
 test("callback results use fixed safe destinations", async ({ page }) => {
-  await page.goto("/auth/result?status=success&flow=account-recovery");
-  await expect(page.getByRole("link", { name: "Continue" })).toHaveAttribute(
+  await page.goto("/es/auth/result?status=success&flow=account-recovery");
+  await expect(page.getByRole("link", { name: "Continuar" })).toHaveAttribute(
     "href",
-    "/restore-access",
+    "/es/restore-access",
   );
 
-  await page.goto("/auth/result?status=error&flow=recovery");
-  await expect(page.getByRole("link", { name: "Try again" })).toHaveAttribute(
-    "href",
-    "/restore-access",
-  );
+  await page.goto("/es/auth/result?status=error&flow=recovery");
+  await expect(
+    page.getByRole("link", { name: "Intentarlo de nuevo" }),
+  ).toHaveAttribute("href", "/es/restore-access");
 
   await page.goto(
-    "/auth/result?status=error&flow=link&reason=google-already-linked",
+    "/es/auth/result?status=error&flow=link&reason=google-already-linked",
   );
   await expect(
     page.getByRole("heading", {
-      name: "This Google account is already linked to another user.",
+      name: "Esta cuenta de Google ya está vinculada a otro usuario.",
     }),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Try again" })).toHaveAttribute(
-    "href",
-    "/security/sign-in",
-  );
+  await expect(
+    page.getByRole("link", { name: "Intentarlo de nuevo" }),
+  ).toHaveAttribute("href", "/es/security/sign-in");
 
   await page.goto(
-    "/auth/result?status=error&flow=step-up&source=recovery&reason=google-account-mismatch",
+    "/es/auth/result?status=error&flow=step-up&source=recovery&reason=google-account-mismatch",
   );
   await expect(
     page.getByRole("heading", {
-      name: "Use the Google account linked to this user.",
+      name: "Usa la cuenta de Google vinculada a este usuario.",
     }),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Try again" })).toHaveAttribute(
-    "href",
-    "/security/recovery?stepUp=failed",
-  );
+  await expect(
+    page.getByRole("link", { name: "Intentarlo de nuevo" }),
+  ).toHaveAttribute("href", "/es/security/recovery?stepUp=failed");
 
-  await page.goto("/auth/result?status=success&flow=step-up&source=recovery");
-  await expect(page.getByRole("link", { name: "Continue" })).toHaveAttribute(
+  await page.goto(
+    "/es/auth/result?status=success&flow=step-up&source=recovery",
+  );
+  await expect(page.getByRole("link", { name: "Continuar" })).toHaveAttribute(
     "href",
-    "/security/recovery?stepUp=complete",
+    "/es/security/recovery?stepUp=complete",
   );
 });

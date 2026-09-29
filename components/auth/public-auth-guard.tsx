@@ -2,12 +2,14 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useEffectEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { ApiError, apiRequest } from "@/lib/api/client";
+import { useRouter } from "@/i18n/navigation";
 
 export function PublicAuthGuard({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const t = useTranslations("common");
   const [checking, setChecking] = useState(true);
   const checkSession = useEffectEvent(async () => {
     try {
@@ -35,7 +37,7 @@ export function PublicAuthGuard({ children }: { children: ReactNode }) {
           className="size-7 animate-spin rounded-full border-2 border-brand-700 border-t-transparent"
           aria-hidden="true"
         />
-        <p className="text-sm font-medium text-muted">Checking your session</p>
+        <p className="text-sm font-medium text-muted">{t("checkingSession")}</p>
       </div>
     </main>
   );

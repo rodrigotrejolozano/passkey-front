@@ -1,10 +1,10 @@
 "use client";
 
 import { startAuthentication } from "@simplewebauthn/browser";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { Fingerprint, LogIn } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { PublicAuthGuard } from "@/components/auth/public-auth-guard";
 import { FocusError } from "@/components/focus-error";
@@ -13,11 +13,15 @@ import { ApiError, jsonRequest } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { GoogleMark } from "@/components/google-mark";
+import { Link, useRouter } from "@/i18n/navigation";
 
 type AuthenticationOptions = { data: { challengeId: string; options: object } };
 
 export default function SignInPage() {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations("auth");
+  const common = useTranslations("common");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -56,13 +60,13 @@ export default function SignInPage() {
             <LogIn className="size-5" aria-hidden="true" />
           </div>
           <p className="mt-6 text-xs font-bold tracking-[0.16em] text-brand-700">
-            WELCOME BACK
+            {t("welcomeBack")}
           </p>
           <h1 className="mt-3 text-2xl font-bold tracking-tight text-ink">
-            Sign in without a password.
+            {t("signInTitle")}
           </h1>
           <p className="mt-2 text-sm leading-6 text-muted">
-            Verify with a passkey or the Google account you linked.
+            {t("signInDescription")}
           </p>
           <div className="mt-7 grid gap-3">
             <Suspense fallback={null}>
@@ -70,23 +74,23 @@ export default function SignInPage() {
             </Suspense>
             <Button onClick={signIn} loading={loading} className="w-full">
               <Fingerprint className="size-4" aria-hidden="true" />
-              {loading ? "Signing in..." : "Sign in with Passkey"}
+              {loading ? common("loading") : t("signInPasskey")}
             </Button>
             <div className="flex items-center gap-3 text-xs font-medium text-muted">
               <span className="h-px flex-1 bg-line" />
-              or
+              {common("or")}
               <span className="h-px flex-1 bg-line" />
             </div>
             <Button
               variant="secondary"
               onClick={() =>
-                (window.location.href = `${process.env.NEXT_PUBLIC_API_ORIGIN ?? "http://localhost:3001"}/api/auth/google/start`)
+                (window.location.href = `${process.env.NEXT_PUBLIC_API_ORIGIN ?? "http://localhost:3001"}/api/auth/google/start?locale=${locale}`)
               }
               disabled={loading}
               className="w-full"
             >
               <GoogleMark />
-              Continue with Google
+              {t("continueGoogle")}
             </Button>
             <FocusError message={error} />
           </div>
@@ -95,10 +99,10 @@ export default function SignInPage() {
               href="/recovery"
               className="font-semibold text-brand-700 hover:text-brand-800"
             >
-              Can&apos;t access your account?
+              {t("cantAccess")}
             </Link>
             <Link href="/create-account" className="text-muted hover:text-ink">
-              Create account
+              {t("createAccount")}
             </Link>
           </div>
         </section>
@@ -109,10 +113,11 @@ export default function SignInPage() {
 
 function SessionExpiredNotice() {
   const searchParams = useSearchParams();
+  const t = useTranslations("auth");
   if (searchParams.get("reason") !== "session-expired") return null;
   return (
     <Alert tone="info" role="status">
-      Your session expired. Sign in again to continue.
+      {t("sessionExpired")}
     </Alert>
   );
 }

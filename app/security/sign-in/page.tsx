@@ -2,6 +2,8 @@
 
 import { startRegistration } from "@simplewebauthn/browser";
 import { KeyRound, Pencil, Plus, Trash2, Unplug } from "lucide-react";
+import { useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useEffect, useEffectEvent, useState } from "react";
 
 import { SettingsShell } from "@/components/layout/settings-shell";
@@ -32,13 +34,13 @@ type PendingAction = {
 };
 const STEP_UP_RESUME_KEY = "passkey.sign-in-step-up";
 
-function errorMessage(cause: unknown) {
-  return cause instanceof ApiError
-    ? cause.message
-    : "Your sign-in methods could not be loaded. Please try again.";
+function errorMessage(cause: unknown, fallback: string) {
+  return cause instanceof ApiError ? cause.message : fallback;
 }
 
 export default function SignInMethodsPage() {
+  const locale = useLocale();
+  const t = useTranslations("signInMethods");
   const [passkeys, setPasskeys] = useState<Passkey[]>([]);
   const [google, setGoogle] =
     useState<GoogleResponse["data"]["identity"]>(null);
@@ -48,7 +50,9 @@ export default function SignInMethodsPage() {
   const [error, setError] = useState<string>();
   const [renaming, setRenaming] = useState<Passkey>();
   const resumePasskey = useEffectEvent(() => {
-    void addPasskey().catch((cause) => setError(errorMessage(cause)));
+    void addPasskey().catch((cause) =>
+      setError(errorMessage(cause, t("error"))),
+    );
   });
 
   async function load() {
@@ -63,7 +67,7 @@ export default function SignInMethodsPage() {
       setGoogle(identity.data.identity);
       setLoaded(true);
     } catch (cause) {
-      setError(errorMessage(cause));
+      setError(errorMessage(cause, t("error")));
     } finally {
       setLoading(false);
     }
@@ -131,7 +135,7 @@ export default function SignInMethodsPage() {
 
   function connectGoogle() {
     window.location.assign(
-      `${process.env.NEXT_PUBLIC_API_ORIGIN ?? "http://localhost:3001"}/api/security/google/connect`,
+      `${process.env.NEXT_PUBLIC_API_ORIGIN ?? "http://localhost:3001"}/api/security/google/connect?locale=${locale}`,
     );
     return Promise.resolve();
   }
@@ -140,13 +144,11 @@ export default function SignInMethodsPage() {
     <SettingsShell>
       <div className="grid gap-6">
         <section className="grid gap-2">
-          <p className="eyebrow">SIGN-IN METHODS</p>
+          <p className="eyebrow">{t("eyebrow")}</p>
           <h1 className="text-3xl font-bold tracking-tight text-ink">
-            Passkeys
+            {t("title")}
           </h1>
-          <p className="leading-7 text-muted">
-            Choose the secure methods that can access your account.
-          </p>
+          <p className="leading-7 text-muted">{t("description")}</p>
         </section>
 
         {error && (
@@ -158,9 +160,11 @@ export default function SignInMethodsPage() {
         <Card className="grid gap-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="grid gap-1">
-              <h2 className="text-lg font-bold text-ink">Your Passkeys</h2>
+              <h2 className="text-lg font-bold text-ink">
+                {t("passkeysTitle")}
+              </h2>
               <p className="text-sm leading-6 text-muted">
-                Use a Passkey to sign in without a password.
+                {t("passkeysDescription")}
               </p>
             </div>
             <Button
@@ -171,7 +175,7 @@ export default function SignInMethodsPage() {
               disabled={loading}
             >
               <Plus className="size-4" aria-hidden="true" />
-              Add Passkey
+              {t("add")}
             </Button>
           </div>
 
@@ -196,8 +200,11 @@ export default function SignInMethodsPage() {
                         {passkey.name}
                       </p>
                       <p className="text-sm text-muted">
-                        Created{" "}
-                        {new Date(passkey.createdAt).toLocaleDateString()}
+                        {t("created", {
+                          date: new Date(
+                            passkey.createdAt,
+                          ).toLocaleDateString(),
+                        })}
                       </p>
                     </div>
                   </div>
@@ -212,7 +219,7 @@ export default function SignInMethodsPage() {
                       }
                     >
                       <Pencil className="size-4" aria-hidden="true" />
-                      Rename
+                      {t("rename")}
                     </Button>
                     <Button
                       variant="ghost"
@@ -224,7 +231,7 @@ export default function SignInMethodsPage() {
                       }
                     >
                       <Trash2 className="size-4" aria-hidden="true" />
-                      Remove
+                      {t("remove")}
                     </Button>
                   </div>
                 </li>
@@ -232,8 +239,8 @@ export default function SignInMethodsPage() {
             </ul>
           ) : !loaded ? null : (
             <EmptyState
-              title="No Passkeys yet"
-              description="Add a Passkey to create a fast, phishing-resistant sign-in method."
+              title={t("emptyTitle")}
+              description={t("emptyDescription")}
             />
           )}
         </Card>
@@ -242,7 +249,7 @@ export default function SignInMethodsPage() {
           <div className="grid gap-1">
             <h2 className="text-lg font-bold text-ink">Google</h2>
             <p className="text-sm leading-6 text-muted">
-              Use a linked Google account as another sign-in option.
+              {t("googleDescription")}
             </p>
           </div>
           {loading ? (
@@ -251,9 +258,9 @@ export default function SignInMethodsPage() {
             <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-line px-4 py-4">
               <div className="grid gap-1">
                 <p className="font-semibold text-ink">
-                  {google?.providerEmail ?? "Not connected"}
+                  {google?.providerEmail ?? t("notConnected")}
                 </p>
-                <Badge>{google ? "Connected" : "Not connected"}</Badge>
+                <Badge>{google ? t("connected") : t("notConnected")}</Badge>
               </div>
               {google ? (
                 <Button
@@ -262,7 +269,7 @@ export default function SignInMethodsPage() {
                   onClick={() => setAction({ execute: disconnectGoogle })}
                 >
                   <Unplug className="size-4" aria-hidden="true" />
-                  Disconnect Google
+                  {t("disconnect")}
                 </Button>
               ) : (
                 <Button
@@ -270,7 +277,7 @@ export default function SignInMethodsPage() {
                   size="sm"
                   onClick={() => setAction({ execute: connectGoogle })}
                 >
-                  Connect Google
+                  {t("connect")}
                 </Button>
               )}
             </div>

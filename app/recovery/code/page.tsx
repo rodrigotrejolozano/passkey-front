@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { FormEvent, useState } from "react";
 import { KeyRound } from "lucide-react";
 
@@ -11,9 +10,12 @@ import { ApiError, jsonRequest } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
+import { Link, useRouter } from "@/i18n/navigation";
 
 export default function RecoveryCodePage() {
   const router = useRouter();
+  const t = useTranslations("recovery");
+  const common = useTranslations("common");
   const [code, setCode] = useState("");
   const [error, setError] = useState<string>();
   const [loading, setLoading] = useState(false);
@@ -42,25 +44,25 @@ export default function RecoveryCodePage() {
             <KeyRound className="size-5" aria-hidden="true" />
           </div>
           <p className="mt-6 text-xs font-bold tracking-[0.16em] text-brand-700">
-            ACCOUNT RECOVERY
+            {t("eyebrow")}
           </p>
           <h1 className="mt-3 text-2xl font-bold tracking-tight text-ink">
-            Use a recovery code
+            {t("codeTitle")}
           </h1>
           <p className="mt-2 text-sm leading-6 text-muted">
-            Enter a saved recovery code to verify your identity.
+            {t("useCodeDescription")}
           </p>
           <form onSubmit={verify} className="mt-7 grid gap-4">
             <Field
               id="code"
-              label="Recovery code"
+              label={t("codeLabel")}
               value={code}
               onChange={(event) => setCode(event.target.value)}
               autoComplete="one-time-code"
               required
             />
             <Button type="submit" loading={loading} className="w-full">
-              {loading ? "Verifying..." : "Verify recovery code"}
+              {loading ? common("verifying") : t("verifyRecoveryCode")}
             </Button>
             <FocusError message={error} />
           </form>
@@ -68,7 +70,7 @@ export default function RecoveryCodePage() {
             href="/recovery/email"
             className="mt-6 block text-center text-sm font-semibold text-brand-700 hover:text-brand-800"
           >
-            Use recovery email instead
+            {t("useEmailInstead")}
           </Link>
         </Card>
       </div>

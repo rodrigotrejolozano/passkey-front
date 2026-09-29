@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useEffectEvent, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
@@ -15,6 +16,8 @@ export function PasskeyRenameDialog({
   onCancel: () => void;
   onSave: (id: string, name: string) => Promise<void>;
 }) {
+  const t = useTranslations("dialogs");
+  const common = useTranslations("common");
   const input = useRef<HTMLInputElement>(null);
   const dialog = useRef<HTMLDivElement>(null);
   const [name, setName] = useState(passkey.name);
@@ -95,23 +98,23 @@ export function PasskeyRenameDialog({
       >
         <div className="grid gap-2">
           <p className="text-xs font-bold tracking-[0.14em] text-brand-700">
-            SIGN-IN METHODS
+            {t("renameEyebrow")}
           </p>
           <h2 id="rename-passkey-title" className="text-xl font-bold text-ink">
-            Rename Passkey
+            {t("renameTitle")}
           </h2>
           <p
             id="rename-passkey-description"
             className="text-sm leading-6 text-muted"
           >
-            Choose a name that helps you recognize this device later.
+            {t("renameDescription")}
           </p>
         </div>
         <form onSubmit={submit} className="grid gap-4">
           <Field
             ref={input}
             id="passkey-name"
-            label="Passkey name"
+            label={t("passkeyName")}
             value={name}
             onChange={(event) => setName(event.target.value)}
             autoComplete="off"
@@ -125,10 +128,10 @@ export function PasskeyRenameDialog({
               onClick={onCancel}
               disabled={saving}
             >
-              Cancel
+              {common("cancel")}
             </Button>
             <Button type="submit" loading={saving}>
-              Save name
+              {t("saveName")}
             </Button>
           </div>
         </form>

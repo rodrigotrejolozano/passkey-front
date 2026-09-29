@@ -1,20 +1,22 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
+
+import { Link, usePathname } from "@/i18n/navigation";
 
 const links = [
-  ["/profile", "Profile"],
-  ["/security/sign-in", "Sign-in methods"],
-  ["/security/sessions", "Sessions"],
-  ["/security/recovery", "Recovery"],
+  ["/profile", "profile"],
+  ["/security/sign-in", "signInMethods"],
+  ["/security/sessions", "sessions"],
+  ["/security/recovery", "recovery"],
 ] as const;
 
 export function SettingsNavigation() {
   const pathname = usePathname();
+  const t = useTranslations("navigation");
   return (
     <nav
-      aria-label="Settings navigation"
+      aria-label={t("settingsLabel")}
       className="-mx-5 overflow-x-auto px-5 sm:mx-0 sm:px-0"
     >
       <div className="flex w-max min-w-full gap-1 rounded-xl border border-line bg-white p-1 sm:min-w-0">
@@ -27,7 +29,7 @@ export function SettingsNavigation() {
               aria-current={active ? "page" : undefined}
               className={`whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition ${active ? "bg-brand-700 text-white shadow-sm" : "text-muted hover:bg-canvas hover:text-ink"}`}
             >
-              {label}
+              {t(label)}
             </Link>
           );
         })}

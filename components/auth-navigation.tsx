@@ -1,19 +1,21 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
+
+import { Link, usePathname } from "@/i18n/navigation";
 
 export function AuthNavigation() {
   const pathname = usePathname();
+  const t = useTranslations("navigation");
   const [open, setOpen] = useState(false);
   const links = [
-    ["/home", "Home"],
-    ["/security/sign-in", "Settings"],
+    ["/home", t("home")],
+    ["/security/sign-in", t("settings")],
   ] as const;
   return (
-    <nav aria-label="Authenticated navigation" className="relative">
+    <nav aria-label={t("authenticated")} className="relative">
       <button
         type="button"
         className="grid size-10 place-items-center rounded-lg text-muted hover:bg-canvas hover:text-ink sm:hidden"
@@ -21,7 +23,7 @@ export function AuthNavigation() {
         aria-controls="authenticated-navigation-links"
         onClick={() => setOpen((current) => !current)}
       >
-        <span className="sr-only">Toggle navigation</span>
+        <span className="sr-only">{t("toggle")}</span>
         {open ? (
           <X className="size-5" aria-hidden="true" />
         ) : (

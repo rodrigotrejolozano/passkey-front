@@ -46,12 +46,12 @@ test("authenticated home loads and logs out with CSRF", async ({ page }) => {
     });
   });
 
-  await page.goto("/home");
+  await page.goto("/en/home");
   await expect(
     page.getByRole("heading", { name: "Welcome, Demo User" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Logout" }).click();
-  await expect(page).toHaveURL(/\/$/);
+  await page.getByRole("button", { name: "Log out" }).click();
+  await expect(page).toHaveURL(/\/en$/);
 });
 
 test("authenticated navigation fits the viewport", async ({ page }) => {
@@ -67,7 +67,7 @@ test("authenticated navigation fits the viewport", async ({ page }) => {
       }),
     });
   });
-  await page.goto("/home");
+  await page.goto("/en/home");
   await expect(page.getByRole("navigation")).toBeVisible();
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth > window.innerWidth,

@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useEffect, useEffectEvent, useState } from "react";
+import { useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 
 import { SettingsShell } from "@/components/layout/settings-shell";
 import { FocusError } from "@/components/focus-error";
@@ -12,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Link } from "@/i18n/navigation";
 import {
   ApiError,
   apiRequest,
@@ -33,6 +35,9 @@ type PendingAction =
 const RESUME_KEY = "passkey.recovery-step-up";
 
 export default function RecoverySettingsPage() {
+  const locale = useLocale();
+  const t = useTranslations("recoverySettings");
+  const recovery = useTranslations("recovery");
   const [configured, setConfigured] =
     useState<RecoveryEmailResponse["data"]["recoveryEmail"]>(null);
   const [email, setEmail] = useState("");
@@ -84,7 +89,7 @@ export default function RecoverySettingsPage() {
     setError(undefined);
     const result = await protectedJsonRequest<VerificationResponse>(
       "/api/security/recovery-email/verification",
-      { email: targetEmail, deliveryMethod: method },
+      { email: targetEmail, deliveryMethod: method, locale },
     );
     setEmail(targetEmail);
     setDeliveryMethod(method);
@@ -179,19 +184,16 @@ export default function RecoverySettingsPage() {
     <SettingsShell>
       <div className="grid w-full gap-6">
         <section className="grid gap-3">
-          <p className="eyebrow">ACCOUNT RECOVERY</p>
+          <p className="eyebrow">{t("eyebrow")}</p>
           <h1 className="text-3xl font-bold tracking-tight text-ink">
-            Protect your account
+            {t("title")}
           </h1>
-          <p className="leading-7 text-muted">
-            Add a verified recovery email and save recovery codes before you
-            need them.
-          </p>
+          <p className="leading-7 text-muted">{t("description")}</p>
           <Link
             href="/home"
             className="w-fit text-sm font-semibold text-brand-800 hover:text-brand-900"
           >
-            Continue to Home
+            {t("continueHome")}
           </Link>
         </section>
 
@@ -199,9 +201,9 @@ export default function RecoverySettingsPage() {
 
         <Card className="grid gap-5">
           <div className="grid gap-1">
-            <h2 className="text-lg font-bold text-ink">Recovery email</h2>
+            <h2 className="text-lg font-bold text-ink">{t("emailTitle")}</h2>
             <p className="text-sm leading-6 text-muted">
-              Keep an email ready in case all sign-in methods are unavailable.
+              {t("emailDescription")}
             </p>
           </div>
 
@@ -215,7 +217,7 @@ export default function RecoverySettingsPage() {
               {configured ? (
                 <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-line px-4 py-4">
                   <p className="font-semibold text-ink">
-                    {configured.email} is verified.
+                    {t("verified", { email: configured.email })}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <Button
@@ -223,21 +225,20 @@ export default function RecoverySettingsPage() {
                       size="sm"
                       onClick={() => setEditing(true)}
                     >
-                      Change recovery email
+                      {t("change")}
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setAction({ type: "remove" })}
                     >
-                      Remove recovery email
+                      {t("remove")}
                     </Button>
                   </div>
                 </div>
               ) : (
                 <p className="text-sm leading-6 text-muted">
-                  Add an email you can use if all sign-in methods are
-                  unavailable.
+                  {t("addDescription")}
                 </p>
               )}
 
@@ -246,7 +247,7 @@ export default function RecoverySettingsPage() {
                   <Field
                     id="email"
                     type="email"
-                    label="Recovery email"
+                    label={recovery("recoveryEmail")}
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     required
@@ -256,7 +257,7 @@ export default function RecoverySettingsPage() {
                       htmlFor="delivery-method"
                       className="text-sm font-semibold text-ink"
                     >
-                      Delivery method
+                      {t("delivery")}
                     </label>
                     <select
                       id="delivery-method"
@@ -266,8 +267,12 @@ export default function RecoverySettingsPage() {
                       }
                       className="min-h-11 rounded-xl border border-line bg-white px-3 text-ink shadow-sm outline-none focus:border-brand-600 focus:ring-3 focus:ring-brand-100"
                     >
-                      <option value="OTP">Verification code</option>
-                      <option value="MAGIC_LINK">Magic Link</option>
+                      <option value="OTP">
+                        {recovery("verificationCode")}
+                      </option>
+                      <option value="MAGIC_LINK">
+                        {recovery("magicLink")}
+                      </option>
                     </select>
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
@@ -276,12 +281,11 @@ export default function RecoverySettingsPage() {
                         setAction({ type: "verify", email, deliveryMethod })
                       }
                     >
-                      Send verification instructions
+                      {t("send")}
                     </Button>
                     {linkSent && (
                       <p className="text-sm leading-6 text-muted">
-                        Check your inbox. The verification link expires in five
-                        minutes.
+                        {t("linkSent")}
                       </p>
                     )}
                   </div>
@@ -295,14 +299,14 @@ export default function RecoverySettingsPage() {
                 >
                   <Field
                     id="code"
-                    label="Verification code"
+                    label={recovery("verificationCode")}
                     value={code}
                     onChange={(event) => setCode(event.target.value)}
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     required
                   />
-                  <Button type="submit">Verify recovery email</Button>
+                  <Button type="submit">{t("verify")}</Button>
                 </form>
               )}
             </>
@@ -311,11 +315,11 @@ export default function RecoverySettingsPage() {
 
         <Card className="grid gap-5">
           <div className="grid gap-1">
-            <h2 className="text-lg font-bold text-ink">Recovery codes</h2>
+            <h2 className="text-lg font-bold text-ink">{t("codesTitle")}</h2>
             <p className="text-sm leading-6 text-muted">
               {recoveryCodesConfigured
-                ? "Recovery codes are already configured. Generate new codes only if you no longer have the previous set."
-                : "Generate single-use codes as a backup if email is unavailable."}
+                ? t("codesConfigured")
+                : t("codesDescription")}
             </p>
           </div>
           {loading ? (
@@ -329,9 +333,7 @@ export default function RecoverySettingsPage() {
                   : setAction({ type: "codes" })
               }
             >
-              {recoveryCodesConfigured
-                ? "Generate new recovery codes"
-                : "Generate recovery codes"}
+              {recoveryCodesConfigured ? t("generateNew") : t("generate")}
             </Button>
           ) : null}
         </Card>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 export function RecoveryCodesDialog({
   codes,
@@ -9,6 +10,7 @@ export function RecoveryCodesDialog({
   codes: string[];
   onConfirm: () => void;
 }) {
+  const t = useTranslations("dialogs");
   const dialog = useRef<HTMLDivElement>(null);
   const copyButton = useRef<HTMLButtonElement>(null);
   const content = codes.join("\n");
@@ -81,16 +83,16 @@ export function RecoveryCodesDialog({
       >
         <div className="grid gap-1">
           <p className="text-xs font-bold tracking-[0.14em] text-brand-700">
-            ACCOUNT RECOVERY
+            {t("codesEyebrow")}
           </p>
           <h2 id="recovery-codes-title" className="text-xl font-bold text-ink">
-            Save your recovery codes
+            {t("codesTitle")}
           </h2>
           <p
             id="recovery-codes-description"
             className="text-sm leading-6 text-muted"
           >
-            These single-use codes will not be shown again.
+            {t("codesDescription")}
           </p>
         </div>
         <pre className="overflow-auto rounded-xl bg-canvas p-4 text-sm leading-6 text-ink">
@@ -102,19 +104,19 @@ export function RecoveryCodesDialog({
             onClick={() => void copy()}
             className="min-h-11 rounded-xl border border-line bg-white px-4 text-sm font-semibold text-ink hover:bg-canvas"
           >
-            Copy codes
+            {t("copy")}
           </button>
           <button
             onClick={download}
             className="min-h-11 rounded-xl border border-line bg-white px-4 text-sm font-semibold text-ink hover:bg-canvas"
           >
-            Download codes
+            {t("download")}
           </button>
           <button
             onClick={onConfirm}
             className="min-h-11 rounded-xl bg-brand-700 px-4 text-sm font-semibold text-white hover:bg-brand-800 sm:col-span-2"
           >
-            I saved my codes
+            {t("savedCodes")}
           </button>
         </div>
         {copyStatus && (

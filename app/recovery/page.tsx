@@ -1,10 +1,13 @@
-import Link from "next/link";
 import { ChevronRight, Mail, ShieldCheck, Ticket } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { AuthPortal } from "@/components/layout/auth-portal";
 import { Card } from "@/components/ui/card";
+import { Link } from "@/i18n/navigation";
 
 export default function RecoveryPage() {
+  const t = useTranslations("recovery");
+  const common = useTranslations("common");
   return (
     <AuthPortal>
       <div className="w-full">
@@ -13,35 +16,34 @@ export default function RecoveryPage() {
             <ShieldCheck className="size-5" aria-hidden="true" />
           </div>
           <p className="mt-5 text-xs font-bold tracking-[0.16em] text-brand-700">
-            ACCOUNT RECOVERY
+            {t("eyebrow")}
           </p>
           <h1 className="mt-3 text-3xl font-bold tracking-tight text-ink">
-            Choose a recovery method
+            {t("chooseTitle")}
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted">
-            Recovery verifies your identity first. You will restore a sign-in
-            method before receiving normal account access.
+            {t("chooseDescription")}
           </p>
         </div>
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <RecoveryOption
             href="/recovery/email"
             icon={Mail}
-            title="Use recovery email"
-            description="Receive a verification code or secure sign-in link."
+            title={t("emailTitle")}
+            description={t("emailDescription")}
           />
           <RecoveryOption
             href="/recovery/code"
             icon={Ticket}
-            title="Use a recovery code"
-            description="Enter one of the recovery codes saved for your account."
+            title={t("codeTitle")}
+            description={t("codeDescription")}
           />
         </div>
         <Link
           href="/sign-in"
           className="mx-auto mt-7 block w-fit text-sm font-semibold text-brand-700 hover:text-brand-800"
         >
-          Back to sign in
+          {common("backToSignIn")}
         </Link>
       </div>
     </AuthPortal>
