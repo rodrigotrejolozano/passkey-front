@@ -6,6 +6,7 @@ import { FormEvent, useEffect, useEffectEvent, useState } from "react";
 import { AuthNavigation } from "@/components/auth-navigation";
 import { FocusError } from "@/components/focus-error";
 import { RecoveryCodesDialog } from "@/components/recovery-codes-dialog";
+import { RecoveryCodesReplaceDialog } from "@/components/recovery-codes-replace-dialog";
 import { StepUpDialog } from "@/components/step-up-dialog";
 import {
   ApiError,
@@ -19,6 +20,7 @@ type RecoveryEmailResponse = {
 };
 type VerificationResponse = { data: { challengeId: string } };
 type RecoveryCodesResponse = { data: { codes: string[] } };
+type RecoveryCodesStatusResponse = { data: { configured: boolean } };
 type DeliveryMethod = "OTP" | "MAGIC_LINK";
 type PendingAction =
   | { type: "remove" }
@@ -36,12 +38,20 @@ export default function RecoverySettingsPage() {
   const [error, setError] = useState<string>();
   const [editing, setEditing] = useState(false);
   const [codes, setCodes] = useState<string[]>();
+  const [recoveryCodesConfigured, setRecoveryCodesConfigured] = useState(false);
+  const [confirmCodeReplacement, setConfirmCodeReplacement] = useState(false);
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("OTP");
   const [linkSent, setLinkSent] = useState(false);
   const load = () =>
-    apiRequest<RecoveryEmailResponse>("/api/security/recovery-email").then(
-      (result) => setConfigured(result.data.recoveryEmail),
-    );
+    Promise.all([
+      apiRequest<RecoveryEmailResponse>("/api/security/recovery-email"),
+      apiRequest<RecoveryCodesStatusResponse>(
+        "/api/security/recovery-email/codes",
+      ),
+    ]).then(([emailResult, codesResult]) => {
+      setConfigured(emailResult.data.recoveryEmail);
+      setRecoveryCodesConfigured(codesResult.data.configured);
+    });
   function showError(cause: unknown) {
     setError(
       cause instanceof ApiError
@@ -95,6 +105,7 @@ export default function RecoverySettingsPage() {
       {},
     );
     setCodes(result.data.codes);
+    setRecoveryCodesConfigured(true);
   }
   async function runAction(pending: PendingAction) {
     if (pending.type === "remove") return remove();
@@ -107,6 +118,7 @@ export default function RecoverySettingsPage() {
     try {
       await load();
       await runAction(JSON.parse(saved) as PendingAction);
+      window.history.replaceState(null, "", "/security/recovery");
     } catch (cause) {
       showError(cause);
     }
@@ -194,10 +206,31 @@ export default function RecoverySettingsPage() {
         </form>
       )}
       <h2>Recovery codes</h2>
-      <p>Generate single-use codes as a backup if email is unavailable.</p>
-      <button onClick={() => setAction({ type: "codes" })}>
-        Generate recovery codes
+      <p>
+        {recoveryCodesConfigured
+          ? "Recovery codes are already configured. Generate new codes only if you no longer have the previous set."
+          : "Generate single-use codes as a backup if email is unavailable."}
+      </p>
+      <button
+        onClick={() =>
+          recoveryCodesConfigured
+            ? setConfirmCodeReplacement(true)
+            : setAction({ type: "codes" })
+        }
+      >
+        {recoveryCodesConfigured
+          ? "Generate new recovery codes"
+          : "Generate recovery codes"}
       </button>
+      {confirmCodeReplacement && (
+        <RecoveryCodesReplaceDialog
+          onCancel={() => setConfirmCodeReplacement(false)}
+          onConfirm={() => {
+            setConfirmCodeReplacement(false);
+            setAction({ type: "codes" });
+          }}
+        />
+      )}
       {codes && (
         <RecoveryCodesDialog
           codes={codes}
