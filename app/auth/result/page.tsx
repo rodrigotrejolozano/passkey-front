@@ -63,7 +63,9 @@ export default async function AuthResultPage({
             ? "Use the Google account linked to this user."
             : success
               ? stepUp
-                ? "Identity verification complete. Repeat your security action."
+                ? parameters.source === "recovery"
+                  ? "Identity verification complete. Continue to finish your security action."
+                  : "Identity verification complete. Repeat your security action."
                 : accountRecovery
                   ? "Recovery email verified."
                   : recoveryEmail
