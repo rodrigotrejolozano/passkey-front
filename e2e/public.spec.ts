@@ -60,4 +60,36 @@ test("callback results use fixed safe destinations", async ({ page }) => {
     "href",
     "/restore-access",
   );
+
+  await page.goto(
+    "/auth/result?status=error&flow=link&reason=google-already-linked",
+  );
+  await expect(
+    page.getByRole("heading", {
+      name: "This Google account is already linked to another user.",
+    }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Try again" })).toHaveAttribute(
+    "href",
+    "/security/sign-in",
+  );
+
+  await page.goto(
+    "/auth/result?status=error&flow=step-up&source=recovery&reason=google-account-mismatch",
+  );
+  await expect(
+    page.getByRole("heading", {
+      name: "Use the Google account linked to this user.",
+    }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Try again" })).toHaveAttribute(
+    "href",
+    "/security/recovery?stepUp=failed",
+  );
+
+  await page.goto("/auth/result?status=success&flow=step-up&source=recovery");
+  await expect(page.getByRole("link", { name: "Continue" })).toHaveAttribute(
+    "href",
+    "/security/recovery?stepUp=complete",
+  );
 });

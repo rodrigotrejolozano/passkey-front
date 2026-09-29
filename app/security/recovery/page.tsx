@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useEffectEvent, useState } from "react";
 
 import { AuthNavigation } from "@/components/auth-navigation";
+import { FocusError } from "@/components/focus-error";
 import { RecoveryCodesDialog } from "@/components/recovery-codes-dialog";
 import { StepUpDialog } from "@/components/step-up-dialog";
 import {
+  ApiError,
   apiRequest,
   protectedJsonRequest,
   protectedRequest,
@@ -18,6 +20,11 @@ type RecoveryEmailResponse = {
 type VerificationResponse = { data: { challengeId: string } };
 type RecoveryCodesResponse = { data: { codes: string[] } };
 type DeliveryMethod = "OTP" | "MAGIC_LINK";
+type PendingAction =
+  | { type: "remove" }
+  | { type: "verify"; email: string; deliveryMethod: DeliveryMethod }
+  | { type: "codes" };
+const RESUME_KEY = "passkey.recovery-step-up";
 
 export default function RecoverySettingsPage() {
   const [configured, setConfigured] =
@@ -25,7 +32,8 @@ export default function RecoverySettingsPage() {
   const [email, setEmail] = useState("");
   const [challengeId, setChallengeId] = useState<string>();
   const [code, setCode] = useState("");
-  const [action, setAction] = useState<() => Promise<void>>();
+  const [action, setAction] = useState<PendingAction>();
+  const [error, setError] = useState<string>();
   const [editing, setEditing] = useState(false);
   const [codes, setCodes] = useState<string[]>();
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("OTP");
@@ -34,31 +42,46 @@ export default function RecoverySettingsPage() {
     apiRequest<RecoveryEmailResponse>("/api/security/recovery-email").then(
       (result) => setConfigured(result.data.recoveryEmail),
     );
-  useEffect(() => {
-    void load();
-  }, []);
-  async function requestVerification() {
+  function showError(cause: unknown) {
+    setError(
+      cause instanceof ApiError
+        ? cause.message
+        : "The security action could not be completed.",
+    );
+  }
+  async function requestVerification(
+    targetEmail = email,
+    method = deliveryMethod,
+  ) {
+    setError(undefined);
     const result = await protectedJsonRequest<VerificationResponse>(
       "/api/security/recovery-email/verification",
-      { email, deliveryMethod },
+      { email: targetEmail, deliveryMethod: method },
     );
-    if (deliveryMethod === "OTP") setChallengeId(result.data.challengeId);
+    setEmail(targetEmail);
+    setDeliveryMethod(method);
+    if (method === "OTP") setChallengeId(result.data.challengeId);
     else setLinkSent(true);
   }
   async function confirm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!challengeId) return;
-    await protectedJsonRequest(
-      "/api/security/recovery-email/verification/confirm",
-      {
-        challengeId,
-        code,
-      },
-    );
-    setChallengeId(undefined);
-    setCode("");
-    setEditing(false);
-    await load();
+    setError(undefined);
+    try {
+      await protectedJsonRequest(
+        "/api/security/recovery-email/verification/confirm",
+        {
+          challengeId,
+          code,
+        },
+      );
+      setChallengeId(undefined);
+      setCode("");
+      setEditing(false);
+      await load();
+    } catch (cause) {
+      showError(cause);
+    }
   }
   async function remove() {
     await protectedRequest("/api/security/recovery-email", {
@@ -73,6 +96,33 @@ export default function RecoverySettingsPage() {
     );
     setCodes(result.data.codes);
   }
+  async function runAction(pending: PendingAction) {
+    if (pending.type === "remove") return remove();
+    if (pending.type === "codes") return generateCodes();
+    if (pending.type === "verify")
+      return requestVerification(pending.email, pending.deliveryMethod);
+    throw new Error("Unknown recovery action");
+  }
+  const resumeAfterGoogle = useEffectEvent(async (saved: string) => {
+    try {
+      await load();
+      await runAction(JSON.parse(saved) as PendingAction);
+    } catch (cause) {
+      showError(cause);
+    }
+  });
+  useEffect(() => {
+    const stepUp = new URLSearchParams(window.location.search).get("stepUp");
+    if (stepUp !== "complete") {
+      if (stepUp === "failed") window.sessionStorage.removeItem(RESUME_KEY);
+      void load();
+      return;
+    }
+    const saved = window.sessionStorage.getItem(RESUME_KEY);
+    window.sessionStorage.removeItem(RESUME_KEY);
+    if (saved) queueMicrotask(() => void resumeAfterGoogle(saved));
+    else void load();
+  }, []);
   return (
     <main>
       <AuthNavigation />
@@ -86,7 +136,7 @@ export default function RecoverySettingsPage() {
       {configured ? (
         <>
           <p>{configured.email} is verified.</p>
-          <button onClick={() => setAction(() => remove)}>
+          <button onClick={() => setAction({ type: "remove" })}>
             Remove recovery email
           </button>
           <button onClick={() => setEditing(true)}>
@@ -117,7 +167,9 @@ export default function RecoverySettingsPage() {
             <option value="OTP">Verification code</option>
             <option value="MAGIC_LINK">Magic Link</option>
           </select>
-          <button onClick={() => setAction(() => requestVerification)}>
+          <button
+            onClick={() => setAction({ type: "verify", email, deliveryMethod })}
+          >
             Send verification instructions
           </button>
           {linkSent && (
@@ -143,7 +195,7 @@ export default function RecoverySettingsPage() {
       )}
       <h2>Recovery codes</h2>
       <p>Generate single-use codes as a backup if email is unavailable.</p>
-      <button onClick={() => setAction(() => generateCodes)}>
+      <button onClick={() => setAction({ type: "codes" })}>
         Generate recovery codes
       </button>
       {codes && (
@@ -155,12 +207,16 @@ export default function RecoverySettingsPage() {
       {action && (
         <StepUpDialog
           onCancel={() => setAction(undefined)}
+          onGoogleRedirect={() =>
+            window.sessionStorage.setItem(RESUME_KEY, JSON.stringify(action))
+          }
           onVerified={async () => {
-            await action();
+            await runAction(action);
             setAction(undefined);
           }}
         />
       )}
+      <FocusError message={error} />
     </main>
   );
 }

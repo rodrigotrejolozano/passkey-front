@@ -4,28 +4,52 @@ import { startAuthentication } from "@simplewebauthn/browser";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { FocusError } from "@/components/focus-error";
-import { ApiError, apiUrl, protectedJsonRequest } from "@/lib/api/client";
+import {
+  ApiError,
+  apiRequest,
+  apiUrl,
+  protectedJsonRequest,
+} from "@/lib/api/client";
 
 type OptionsResponse = { data: { challengeId: string; options: object } };
+type MethodsResponse = { data: { passkey: boolean; google: boolean } };
 
 export function StepUpDialog({
   onVerified,
   onCancel,
+  onGoogleRedirect,
 }: {
   onVerified: () => Promise<void>;
   onCancel: () => void;
+  onGoogleRedirect?: () => void;
 }) {
   const [error, setError] = useState<string>();
   const [loading, setLoading] = useState(false);
+  const [methods, setMethods] = useState<MethodsResponse["data"]>();
   const dialog = useRef<HTMLDivElement>(null);
   const verifyButton = useRef<HTMLButtonElement>(null);
+  const googleButton = useRef<HTMLButtonElement>(null);
   const cancelFromKeyboard = useEffectEvent(() => {
     if (!loading) onCancel();
   });
 
   useEffect(() => {
+    void apiRequest<MethodsResponse>("/api/step-up/passkey/methods")
+      .then((result) => setMethods(result.data))
+      .catch((cause) =>
+        setError(
+          cause instanceof ApiError
+            ? cause.message
+            : "Verification methods could not be loaded.",
+        ),
+      );
+  }, []);
+  useEffect(() => {
+    if (!methods) return;
+    (methods.passkey ? verifyButton.current : googleButton.current)?.focus();
+  }, [methods]);
+  useEffect(() => {
     const previousFocus = document.activeElement as HTMLElement | null;
-    verifyButton.current?.focus();
     function handleKeyboard(event: KeyboardEvent) {
       if (event.key === "Escape") {
         cancelFromKeyboard();
@@ -94,24 +118,36 @@ export function StepUpDialog({
     >
       <h2 id="step-up-title">Verify it is you</h2>
       <p id="step-up-description">
-        Verify with a Passkey or your linked Google account to continue.
+        {methods?.passkey && methods.google
+          ? "Verify with a Passkey or your linked Google account to continue."
+          : methods?.passkey
+            ? "Verify with one of your Passkeys to continue."
+            : methods?.google
+              ? "Verify with your linked Google account to continue."
+              : "Loading your verification methods."}
       </p>
-      <button ref={verifyButton} onClick={verify} disabled={loading}>
-        {loading ? "Verifying..." : "Verify with Passkey"}
-      </button>
-      <button
-        onClick={() => {
-          const source = window.location.pathname.includes("/recovery")
-            ? "recovery"
-            : "sign-in";
-          window.location.assign(
-            apiUrl(`/api/step-up/google/start?source=${source}`),
-          );
-        }}
-        disabled={loading}
-      >
-        Verify with Google
-      </button>
+      {methods?.passkey && (
+        <button ref={verifyButton} onClick={verify} disabled={loading}>
+          {loading ? "Verifying..." : "Verify with Passkey"}
+        </button>
+      )}
+      {methods?.google && (
+        <button
+          ref={googleButton}
+          onClick={() => {
+            onGoogleRedirect?.();
+            const source = window.location.pathname.includes("/recovery")
+              ? "recovery"
+              : "sign-in";
+            window.location.assign(
+              apiUrl(`/api/step-up/google/start?source=${source}`),
+            );
+          }}
+          disabled={loading}
+        >
+          Verify with Google
+        </button>
+      )}
       <button onClick={onCancel} disabled={loading}>
         Cancel
       </button>
