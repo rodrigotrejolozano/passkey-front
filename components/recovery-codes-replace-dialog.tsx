@@ -43,22 +43,50 @@ export function RecoveryCodesReplaceDialog({
   }, [onCancel]);
 
   return (
-    <div
-      ref={dialog}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="replace-codes-title"
-      aria-describedby="replace-codes-description"
-    >
-      <h2 id="replace-codes-title">Replace recovery codes?</h2>
-      <p id="replace-codes-description">
-        Generating new recovery codes will immediately invalidate every unused
-        recovery code you saved before.
-      </p>
-      <button ref={cancelButton} onClick={onCancel}>
-        Keep current codes
-      </button>
-      <button onClick={onConfirm}>Generate new codes</button>
-    </div>
+    <>
+      <div
+        className="fixed inset-0 z-40 bg-ink/45 backdrop-blur-sm"
+        aria-hidden="true"
+      />
+      <div
+        ref={dialog}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="replace-codes-title"
+        aria-describedby="replace-codes-description"
+        className="fixed left-1/2 top-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 gap-5 overflow-auto rounded-2xl border border-line bg-white p-5 shadow-panel sm:p-6"
+      >
+        <div className="grid gap-2">
+          <p className="text-xs font-bold tracking-[0.14em] text-danger-700">
+            SECURITY WARNING
+          </p>
+          <h2 id="replace-codes-title" className="text-xl font-bold text-ink">
+            Replace recovery codes?
+          </h2>
+          <p
+            id="replace-codes-description"
+            className="text-sm leading-6 text-muted"
+          >
+            Generating new recovery codes will immediately invalidate every
+            unused recovery code you saved before.
+          </p>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <button
+            ref={cancelButton}
+            onClick={onCancel}
+            className="min-h-11 rounded-xl border border-line bg-white px-4 text-sm font-semibold text-ink hover:bg-canvas"
+          >
+            Keep current codes
+          </button>
+          <button
+            onClick={onConfirm}
+            className="min-h-11 rounded-xl bg-danger-600 px-4 text-sm font-semibold text-white hover:bg-danger-700"
+          >
+            Generate new codes
+          </button>
+        </div>
+      </div>
+    </>
   );
 }

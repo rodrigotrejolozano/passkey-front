@@ -16,6 +16,20 @@ test("public navigation exposes passwordless entry points", async ({
   await expect(page.locator('input[type="password"]')).toHaveCount(0);
 });
 
+test("desktop access portal fits within the viewport", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "chromium", "Desktop-only layout check");
+  await page.goto("/sign-in");
+  await expect(
+    page.getByRole("heading", { name: "Sign in without a password." }),
+  ).toBeVisible();
+  const hasVerticalOverflow = await page.evaluate(
+    () => document.documentElement.scrollHeight > window.innerHeight,
+  );
+  expect(hasVerticalOverflow).toBe(false);
+});
+
 test("recovery chooser reaches email and code methods", async ({ page }) => {
   await page.goto("/recovery");
   await expect(

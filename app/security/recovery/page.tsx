@@ -3,11 +3,15 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useEffectEvent, useState } from "react";
 
-import { AuthNavigation } from "@/components/auth-navigation";
+import { SettingsShell } from "@/components/layout/settings-shell";
 import { FocusError } from "@/components/focus-error";
 import { RecoveryCodesDialog } from "@/components/recovery-codes-dialog";
 import { RecoveryCodesReplaceDialog } from "@/components/recovery-codes-replace-dialog";
 import { StepUpDialog } from "@/components/step-up-dialog";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Field } from "@/components/ui/field";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   ApiError,
   apiRequest,
@@ -42,16 +46,9 @@ export default function RecoverySettingsPage() {
   const [confirmCodeReplacement, setConfirmCodeReplacement] = useState(false);
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("OTP");
   const [linkSent, setLinkSent] = useState(false);
-  const load = () =>
-    Promise.all([
-      apiRequest<RecoveryEmailResponse>("/api/security/recovery-email"),
-      apiRequest<RecoveryCodesStatusResponse>(
-        "/api/security/recovery-email/codes",
-      ),
-    ]).then(([emailResult, codesResult]) => {
-      setConfigured(emailResult.data.recoveryEmail);
-      setRecoveryCodesConfigured(codesResult.data.configured);
-    });
+  const [loading, setLoading] = useState(true);
+  const [loaded, setLoaded] = useState(false);
+
   function showError(cause: unknown) {
     setError(
       cause instanceof ApiError
@@ -59,6 +56,27 @@ export default function RecoverySettingsPage() {
         : "The security action could not be completed.",
     );
   }
+
+  async function load() {
+    setLoading(true);
+    try {
+      const [emailResult, codesResult] = await Promise.all([
+        apiRequest<RecoveryEmailResponse>("/api/security/recovery-email"),
+        apiRequest<RecoveryCodesStatusResponse>(
+          "/api/security/recovery-email/codes",
+        ),
+      ]);
+      setConfigured(emailResult.data.recoveryEmail);
+      setRecoveryCodesConfigured(codesResult.data.configured);
+      setLoaded(true);
+    } catch (cause) {
+      showError(cause);
+      throw cause;
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function requestVerification(
     targetEmail = email,
     method = deliveryMethod,
@@ -73,6 +91,7 @@ export default function RecoverySettingsPage() {
     if (method === "OTP") setChallengeId(result.data.challengeId);
     else setLinkSent(true);
   }
+
   async function confirm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!challengeId) return;
@@ -93,20 +112,35 @@ export default function RecoverySettingsPage() {
       showError(cause);
     }
   }
+
   async function remove() {
-    await protectedRequest("/api/security/recovery-email", {
-      method: "DELETE",
-    });
-    await load();
+    setError(undefined);
+    try {
+      await protectedRequest("/api/security/recovery-email", {
+        method: "DELETE",
+      });
+      await load();
+    } catch (cause) {
+      showError(cause);
+      throw cause;
+    }
   }
+
   async function generateCodes() {
-    const result = await protectedJsonRequest<RecoveryCodesResponse>(
-      "/api/security/recovery-email/codes",
-      {},
-    );
-    setCodes(result.data.codes);
-    setRecoveryCodesConfigured(true);
+    setError(undefined);
+    try {
+      const result = await protectedJsonRequest<RecoveryCodesResponse>(
+        "/api/security/recovery-email/codes",
+        {},
+      );
+      setCodes(result.data.codes);
+      setRecoveryCodesConfigured(true);
+    } catch (cause) {
+      showError(cause);
+      throw cause;
+    }
   }
+
   async function runAction(pending: PendingAction) {
     if (pending.type === "remove") return remove();
     if (pending.type === "codes") return generateCodes();
@@ -114,6 +148,7 @@ export default function RecoverySettingsPage() {
       return requestVerification(pending.email, pending.deliveryMethod);
     throw new Error("Unknown recovery action");
   }
+
   const resumeAfterGoogle = useEffectEvent(async (saved: string) => {
     try {
       await load();
@@ -123,133 +158,212 @@ export default function RecoverySettingsPage() {
       showError(cause);
     }
   });
+  const loadAfterMount = useEffectEvent(
+    () => void load().catch(() => undefined),
+  );
+
   useEffect(() => {
     const stepUp = new URLSearchParams(window.location.search).get("stepUp");
     if (stepUp !== "complete") {
       if (stepUp === "failed") window.sessionStorage.removeItem(RESUME_KEY);
-      void load();
+      queueMicrotask(loadAfterMount);
       return;
     }
     const saved = window.sessionStorage.getItem(RESUME_KEY);
     window.sessionStorage.removeItem(RESUME_KEY);
     if (saved) queueMicrotask(() => void resumeAfterGoogle(saved));
-    else void load();
+    else queueMicrotask(loadAfterMount);
   }, []);
+
   return (
-    <main>
-      <AuthNavigation />
-      <p className="eyebrow">ACCOUNT RECOVERY</p>
-      <h1>Protect your account</h1>
-      <p>
-        Add a verified recovery email and save recovery codes before you need
-        them.
-      </p>
-      <Link href="/home">Continue to Home</Link>
-      {configured ? (
-        <>
-          <p>{configured.email} is verified.</p>
-          <button onClick={() => setAction({ type: "remove" })}>
-            Remove recovery email
-          </button>
-          <button onClick={() => setEditing(true)}>
-            Change recovery email
-          </button>
-        </>
-      ) : (
-        <p>Add an email you can use if all sign-in methods are unavailable.</p>
-      )}
-      {(!configured || editing) && !challengeId && (
-        <>
-          <label htmlFor="email">Recovery email</label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-          />
-          <label htmlFor="delivery-method">Delivery method</label>
-          <select
-            id="delivery-method"
-            value={deliveryMethod}
-            onChange={(event) =>
-              setDeliveryMethod(event.target.value as DeliveryMethod)
-            }
+    <SettingsShell>
+      <div className="grid w-full gap-6">
+        <section className="grid gap-3">
+          <p className="eyebrow">ACCOUNT RECOVERY</p>
+          <h1 className="text-3xl font-bold tracking-tight text-ink">
+            Protect your account
+          </h1>
+          <p className="leading-7 text-muted">
+            Add a verified recovery email and save recovery codes before you
+            need them.
+          </p>
+          <Link
+            href="/home"
+            className="w-fit text-sm font-semibold text-brand-800 hover:text-brand-900"
           >
-            <option value="OTP">Verification code</option>
-            <option value="MAGIC_LINK">Magic Link</option>
-          </select>
-          <button
-            onClick={() => setAction({ type: "verify", email, deliveryMethod })}
-          >
-            Send verification instructions
-          </button>
-          {linkSent && (
-            <p>
-              Check your inbox. The verification link expires in five minutes.
+            Continue to Home
+          </Link>
+        </section>
+
+        <FocusError message={error} />
+
+        <Card className="grid gap-5">
+          <div className="grid gap-1">
+            <h2 className="text-lg font-bold text-ink">Recovery email</h2>
+            <p className="text-sm leading-6 text-muted">
+              Keep an email ready in case all sign-in methods are unavailable.
             </p>
-          )}
-        </>
-      )}
-      {challengeId && (
-        <form onSubmit={confirm}>
-          <label htmlFor="code">Verification code</label>
-          <input
-            id="code"
-            value={code}
-            onChange={(event) => setCode(event.target.value)}
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            required
+          </div>
+
+          {loading ? (
+            <div className="grid gap-3">
+              <Skeleton className="h-5 w-56" />
+              <Skeleton className="h-11 w-52" />
+            </div>
+          ) : loaded ? (
+            <>
+              {configured ? (
+                <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-line px-4 py-4">
+                  <p className="font-semibold text-ink">
+                    {configured.email} is verified.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditing(true)}
+                    >
+                      Change recovery email
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setAction({ type: "remove" })}
+                    >
+                      Remove recovery email
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm leading-6 text-muted">
+                  Add an email you can use if all sign-in methods are
+                  unavailable.
+                </p>
+              )}
+
+              {(!configured || editing) && !challengeId && (
+                <div className="grid gap-5 border-t border-line pt-5">
+                  <Field
+                    id="email"
+                    type="email"
+                    label="Recovery email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    required
+                  />
+                  <div className="grid gap-2">
+                    <label
+                      htmlFor="delivery-method"
+                      className="text-sm font-semibold text-ink"
+                    >
+                      Delivery method
+                    </label>
+                    <select
+                      id="delivery-method"
+                      value={deliveryMethod}
+                      onChange={(event) =>
+                        setDeliveryMethod(event.target.value as DeliveryMethod)
+                      }
+                      className="min-h-11 rounded-xl border border-line bg-white px-3 text-ink shadow-sm outline-none focus:border-brand-600 focus:ring-3 focus:ring-brand-100"
+                    >
+                      <option value="OTP">Verification code</option>
+                      <option value="MAGIC_LINK">Magic Link</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                      onClick={() =>
+                        setAction({ type: "verify", email, deliveryMethod })
+                      }
+                    >
+                      Send verification instructions
+                    </Button>
+                    {linkSent && (
+                      <p className="text-sm leading-6 text-muted">
+                        Check your inbox. The verification link expires in five
+                        minutes.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {challengeId && (
+                <form
+                  onSubmit={confirm}
+                  className="grid gap-5 border-t border-line pt-5"
+                >
+                  <Field
+                    id="code"
+                    label="Verification code"
+                    value={code}
+                    onChange={(event) => setCode(event.target.value)}
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    required
+                  />
+                  <Button type="submit">Verify recovery email</Button>
+                </form>
+              )}
+            </>
+          ) : null}
+        </Card>
+
+        <Card className="grid gap-5">
+          <div className="grid gap-1">
+            <h2 className="text-lg font-bold text-ink">Recovery codes</h2>
+            <p className="text-sm leading-6 text-muted">
+              {recoveryCodesConfigured
+                ? "Recovery codes are already configured. Generate new codes only if you no longer have the previous set."
+                : "Generate single-use codes as a backup if email is unavailable."}
+            </p>
+          </div>
+          {loading ? (
+            <Skeleton className="h-11 w-56" />
+          ) : loaded ? (
+            <Button
+              className="w-fit"
+              onClick={() =>
+                recoveryCodesConfigured
+                  ? setConfirmCodeReplacement(true)
+                  : setAction({ type: "codes" })
+              }
+            >
+              {recoveryCodesConfigured
+                ? "Generate new recovery codes"
+                : "Generate recovery codes"}
+            </Button>
+          ) : null}
+        </Card>
+
+        {confirmCodeReplacement && (
+          <RecoveryCodesReplaceDialog
+            onCancel={() => setConfirmCodeReplacement(false)}
+            onConfirm={() => {
+              setConfirmCodeReplacement(false);
+              setAction({ type: "codes" });
+            }}
           />
-          <button type="submit">Verify recovery email</button>
-        </form>
-      )}
-      <h2>Recovery codes</h2>
-      <p>
-        {recoveryCodesConfigured
-          ? "Recovery codes are already configured. Generate new codes only if you no longer have the previous set."
-          : "Generate single-use codes as a backup if email is unavailable."}
-      </p>
-      <button
-        onClick={() =>
-          recoveryCodesConfigured
-            ? setConfirmCodeReplacement(true)
-            : setAction({ type: "codes" })
-        }
-      >
-        {recoveryCodesConfigured
-          ? "Generate new recovery codes"
-          : "Generate recovery codes"}
-      </button>
-      {confirmCodeReplacement && (
-        <RecoveryCodesReplaceDialog
-          onCancel={() => setConfirmCodeReplacement(false)}
-          onConfirm={() => {
-            setConfirmCodeReplacement(false);
-            setAction({ type: "codes" });
-          }}
-        />
-      )}
-      {codes && (
-        <RecoveryCodesDialog
-          codes={codes}
-          onConfirm={() => setCodes(undefined)}
-        />
-      )}
-      {action && (
-        <StepUpDialog
-          onCancel={() => setAction(undefined)}
-          onGoogleRedirect={() =>
-            window.sessionStorage.setItem(RESUME_KEY, JSON.stringify(action))
-          }
-          onVerified={async () => {
-            await runAction(action);
-            setAction(undefined);
-          }}
-        />
-      )}
-      <FocusError message={error} />
-    </main>
+        )}
+        {codes && (
+          <RecoveryCodesDialog
+            codes={codes}
+            onConfirm={() => setCodes(undefined)}
+          />
+        )}
+        {action && (
+          <StepUpDialog
+            onCancel={() => setAction(undefined)}
+            onGoogleRedirect={() =>
+              window.sessionStorage.setItem(RESUME_KEY, JSON.stringify(action))
+            }
+            onVerified={async () => {
+              await runAction(action);
+              setAction(undefined);
+            }}
+          />
+        )}
+      </div>
+    </SettingsShell>
   );
 }

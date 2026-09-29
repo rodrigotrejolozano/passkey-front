@@ -4,6 +4,7 @@ import { startAuthentication } from "@simplewebauthn/browser";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { FocusError } from "@/components/focus-error";
+import { Button } from "@/components/ui/button";
 import {
   ApiError,
   apiRequest,
@@ -108,50 +109,67 @@ export function StepUpDialog({
     }
   }
   return (
-    <div
-      ref={dialog}
-      role="dialog"
-      aria-modal="true"
-      tabIndex={-1}
-      aria-labelledby="step-up-title"
-      aria-describedby="step-up-description"
-    >
-      <h2 id="step-up-title">Verify it is you</h2>
-      <p id="step-up-description">
-        {methods?.passkey && methods.google
-          ? "Verify with a Passkey or your linked Google account to continue."
-          : methods?.passkey
-            ? "Verify with one of your Passkeys to continue."
-            : methods?.google
-              ? "Verify with your linked Google account to continue."
-              : "Loading your verification methods."}
-      </p>
-      {methods?.passkey && (
-        <button ref={verifyButton} onClick={verify} disabled={loading}>
-          {loading ? "Verifying..." : "Verify with Passkey"}
-        </button>
-      )}
-      {methods?.google && (
-        <button
-          ref={googleButton}
-          onClick={() => {
-            onGoogleRedirect?.();
-            const source = window.location.pathname.includes("/recovery")
-              ? "recovery"
-              : "sign-in";
-            window.location.assign(
-              apiUrl(`/api/step-up/google/start?source=${source}`),
-            );
-          }}
-          disabled={loading}
-        >
-          Verify with Google
-        </button>
-      )}
-      <button onClick={onCancel} disabled={loading}>
-        Cancel
-      </button>
-      <FocusError message={error} />
-    </div>
+    <>
+      <div
+        className="fixed inset-0 z-40 bg-ink/45 backdrop-blur-sm"
+        aria-hidden="true"
+      />
+      <div
+        ref={dialog}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+        aria-labelledby="step-up-title"
+        aria-describedby="step-up-description"
+        className="fixed left-1/2 top-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 gap-5 overflow-auto rounded-2xl border border-line bg-white p-5 shadow-panel sm:p-6"
+      >
+        <div className="grid gap-2">
+          <p className="text-xs font-bold tracking-[0.14em] text-brand-700">
+            SECURITY CHECK
+          </p>
+          <h2 id="step-up-title" className="text-xl font-bold text-ink">
+            Verify it is you
+          </h2>
+          <p id="step-up-description" className="text-sm leading-6 text-muted">
+            {methods?.passkey && methods.google
+              ? "Verify with a Passkey or your linked Google account to continue."
+              : methods?.passkey
+                ? "Verify with one of your Passkeys to continue."
+                : methods?.google
+                  ? "Verify with your linked Google account to continue."
+                  : "Loading your verification methods."}
+          </p>
+        </div>
+        <div className="grid gap-2">
+          {methods?.passkey && (
+            <Button ref={verifyButton} onClick={verify} loading={loading}>
+              {loading ? "Verifying..." : "Verify with Passkey"}
+            </Button>
+          )}
+          {methods?.google && (
+            <Button
+              ref={googleButton}
+              variant="secondary"
+              onClick={() => {
+                onGoogleRedirect?.();
+                const source = window.location.pathname.includes("/recovery")
+                  ? "recovery"
+                  : "sign-in";
+                window.location.assign(
+                  apiUrl(`/api/step-up/google/start?source=${source}`),
+                );
+              }}
+              disabled={loading}
+            >
+              Verify with Google
+            </Button>
+          )}
+          <Button variant="danger" onClick={onCancel} disabled={loading}>
+            Cancel
+          </Button>
+        </div>
+        <FocusError message={error} />
+      </div>
+    </>
   );
 }

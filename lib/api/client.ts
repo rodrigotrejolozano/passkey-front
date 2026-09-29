@@ -16,6 +16,7 @@ type ApiErrorResponse = {
 };
 
 const apiOrigin = process.env.NEXT_PUBLIC_API_ORIGIN ?? "http://localhost:3001";
+const SESSION_INVALID_EVENT = "passkey:session-invalid";
 
 export function apiUrl(path: string): string {
   return new URL(path, apiOrigin).toString();
@@ -36,8 +37,11 @@ export async function apiRequest<T>(
 
   if (!response.ok) {
     const body = (await response.json().catch(() => ({}))) as ApiErrorResponse;
+    const code = body.error?.code ?? "REQUEST_FAILED";
+    if (code === "SESSION_INVALID" && typeof window !== "undefined")
+      window.dispatchEvent(new Event(SESSION_INVALID_EVENT));
     throw new ApiError(
-      body.error?.code ?? "REQUEST_FAILED",
+      code,
       body.error?.message ?? "The request could not be completed.",
       response.status,
     );

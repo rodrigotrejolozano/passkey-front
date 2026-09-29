@@ -66,24 +66,63 @@ export function RecoveryCodesDialog({
   }
 
   return (
-    <div
-      ref={dialog}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="recovery-codes-title"
-      aria-describedby="recovery-codes-description"
-    >
-      <h2 id="recovery-codes-title">Save your recovery codes</h2>
-      <p id="recovery-codes-description">
-        These single-use codes will not be shown again.
-      </p>
-      <pre>{content}</pre>
-      <button ref={copyButton} onClick={() => void copy()}>
-        Copy codes
-      </button>
-      <button onClick={download}>Download codes</button>
-      <button onClick={onConfirm}>I saved my codes</button>
-      {copyStatus && <p role="status">{copyStatus}</p>}
-    </div>
+    <>
+      <div
+        className="fixed inset-0 z-40 bg-ink/45 backdrop-blur-sm"
+        aria-hidden="true"
+      />
+      <div
+        ref={dialog}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="recovery-codes-title"
+        aria-describedby="recovery-codes-description"
+        className="fixed left-1/2 top-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-5 overflow-auto rounded-2xl border border-line bg-white p-5 shadow-panel sm:p-6"
+      >
+        <div className="grid gap-1">
+          <p className="text-xs font-bold tracking-[0.14em] text-brand-700">
+            ACCOUNT RECOVERY
+          </p>
+          <h2 id="recovery-codes-title" className="text-xl font-bold text-ink">
+            Save your recovery codes
+          </h2>
+          <p
+            id="recovery-codes-description"
+            className="text-sm leading-6 text-muted"
+          >
+            These single-use codes will not be shown again.
+          </p>
+        </div>
+        <pre className="overflow-auto rounded-xl bg-canvas p-4 text-sm leading-6 text-ink">
+          {content}
+        </pre>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <button
+            ref={copyButton}
+            onClick={() => void copy()}
+            className="min-h-11 rounded-xl border border-line bg-white px-4 text-sm font-semibold text-ink hover:bg-canvas"
+          >
+            Copy codes
+          </button>
+          <button
+            onClick={download}
+            className="min-h-11 rounded-xl border border-line bg-white px-4 text-sm font-semibold text-ink hover:bg-canvas"
+          >
+            Download codes
+          </button>
+          <button
+            onClick={onConfirm}
+            className="min-h-11 rounded-xl bg-brand-700 px-4 text-sm font-semibold text-white hover:bg-brand-800 sm:col-span-2"
+          >
+            I saved my codes
+          </button>
+        </div>
+        {copyStatus && (
+          <p role="status" className="text-sm leading-6 text-muted">
+            {copyStatus}
+          </p>
+        )}
+      </div>
+    </>
   );
 }
